@@ -58,6 +58,8 @@ public class QuickSorter extends AbstractSorter
 	@Override 
 	public void sort(int order)
 	{
+		setComparator(order);
+		this.order=order;
 		quickSortRec(0,points.length-1);
 		stopwatch.stop();
 		sortingTime = stopwatch.getExeTime();
@@ -73,56 +75,61 @@ public class QuickSorter extends AbstractSorter
 	 */
 	private void quickSortRec(int first, int last)
 	{
-		int i = first;
-		int j = last;
-		// calculate pivot number, for this implementation, the middle index is used.
-		int pivot = (first+last)/2;
-		// Divide into two arrays
-		switch(order) {
-			case 1:
-				if(first>=last)break;
-			while (i <= j) {
-				while (points[i].compareTo(points[pivot])<0) {
-					i++;
-				}
-				while (points[i].compareTo(points[pivot])>0) {
-					j--;
-				}
-					swap(i++, j--);
-			}
-			break;
-			case 2:
-				while (i <= j) {
-					while (pointComparator.compare(points[i],points[pivot])<0) {
-						i++;
-					}
-					while (pointComparator.compare(points[i],points[pivot])>0) {
-						j--;
-					}
-					if (i <= j) {
-						swap(i++, j--);
-					}
-				}
-		}
-		// call recursively on sub array left of the current marker positions, then on the sub array to the right
-		if (first < j)
-			quickSortRec(first, j);
-		if (i < last)
-			quickSortRec(i, last);
+		stopwatch.start();
+		if (last <= first) return;
+		int j = partition(first, last);
+		quickSortRec(first, j-1);
+		quickSortRec(j+1, last);
 	}
 	
 	
 	/**
 	 * Operates on the subarray of points[] with indices between first and last.
 	 * 
-	 * @param first
-	 * @param last
-	 * @return
+	 * @param first first index of the subarray
+	 * @param last last index of the subarray
+	 * @return the midpoint of the new subarray
 	 */
 	private int partition(int first, int last)
 	{
-		// TODO 
-		return 0; 
+		int i = first;
+		int j = last + 1;
+		while (order ==1) {
+
+			// find element greater than pivot
+			while (points[++i].compareTo(points[first])<0)
+				if (i == last) break;
+
+			// find element less than pivot
+			while (points[first].compareTo(points[--j])<0)
+				if (j == first) break;
+
+			// check if markers cross
+			if (i >= j) break;
+
+			swap(i, j);
+		}
+		while (order ==2) {
+
+			// find element greater than pivot
+			while (pointComparator.compare(points[++i],points[first])<0)
+				if (i == last) break;
+
+			// find element less than pivot
+			while (pointComparator.compare(points[first],points[--j])<0)
+				if (j == first) break;
+
+			// check if markers cross
+			if (i >= j) break;
+
+			swap(i, j);
+		}
+
+		// swap pivot element with element at position where markers cross
+		swap(first, j);
+
+		//return new midpoint by which to divide into sub-arrays
+		return j;
 	}	
 		
 

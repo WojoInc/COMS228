@@ -71,8 +71,9 @@ public class SelectionSorter extends AbstractSorter
 					for (int i = j; i < points.length; i++) {
 						if (points[i].compareTo(points[lowest])<0)lowest =i;
 					}
-					//if lowest point is not already in the right position, swap it
+					//if lowest point is not already in the proper position, swap it
 					if (lowest!=j)swap(lowest,j++);
+					if(k==0)
 					k++;
 				}
 				break;
@@ -85,7 +86,7 @@ public class SelectionSorter extends AbstractSorter
 					for (int i = j; i < points.length; i++) {
 						if (pointComparator.compare(points[i],points[lowest])<0)lowest =i;
 					}
-					//if lowest point is not already in the right position, swap it
+					//if lowest point is not already in the proper position, swap it
 					if (lowest!=j)swap(lowest,j++);
 				}
 				break;

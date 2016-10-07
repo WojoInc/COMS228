@@ -18,5 +18,14 @@ public class QuickSorterTest {
         sorter.sort(1);
         System.out.println(sorter.toString());
     }
-
+    @Test
+    public void sort2() throws Exception {
+        Point[] pts = new Point[]{  new Point(16,1),
+                new Point(0,7),
+                new Point(2,3),
+                new Point(0,5)};
+        AbstractSorter sorter = new QuickSorter(pts);
+        sorter.sort(2);
+        System.out.println(sorter.toString());
+    }
 }
