@@ -97,6 +97,7 @@ public abstract class AbstractSorter
 				throw new InputMismatchException();
 			}
 		}
+		points = new Point[temp.size()];
 		temp.toArray(points);
 		for (Point p :
 				points) {
@@ -183,6 +184,7 @@ public abstract class AbstractSorter
 		else {
 			for (int i = 1; i < points.length; i++) {
 				segList.add(new Segment(points[0],points[i]));
+				if(i<points.length-1) segList.add(new Segment(points[i],points[i+1]));
 			}
 		}
 		Segment[] segments = new Segment[segList.size()];
