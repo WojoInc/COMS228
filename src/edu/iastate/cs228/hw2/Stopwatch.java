@@ -5,7 +5,7 @@ package edu.iastate.cs228.hw2;
  * This class serves as a means of calculating execution time within a program and makes use of system.nanotime to
  * achieve accurate results down to the nearest nanosecond.
  *
- * @author:wesolowskitj
+ * @author: Thomas Wesolowski
  * @version: 1.1
  * <b/>
  * Created on 12/18/2014 at 2:30 PM.

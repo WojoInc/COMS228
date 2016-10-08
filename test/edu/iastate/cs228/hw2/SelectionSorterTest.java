@@ -10,13 +10,34 @@ import static org.junit.Assert.*;
 public class SelectionSorterTest {
     @Test
     public void sort() throws Exception {
-        Point[] pts = new Point[]{  new Point(16,1),
-                new Point(2,1),
-                new Point(5,3),
-                new Point(0,5)};
+        Point[] pts = new Point[]{new Point(16, 1),
+                new Point(2, 1),
+                new Point(5, 3),
+                new Point(0, 0)};
+        Point[] comparePts = new Point[]{new Point(0, 0),
+                new Point(2, 1),
+                new Point(5, 3),
+                new Point(16, 1)};
         AbstractSorter sorter = new SelectionSorter(pts);
         sorter.sort(1);
         System.out.println(sorter.toString());
+        assertArrayEquals(comparePts, sorter.points);
     }
 
+    @Test
+    public void sort2() throws Exception {
+        Point[] pts = new Point[]{new Point(16, 1),
+                new Point(2, 1),
+                new Point(5, 3),
+                new Point(0, 0)};
+        Point[] comparePts = new Point[]{  new Point(0,0),
+                new Point(16,1),
+                new Point(2,1),
+                new Point(5,3)};
+        AbstractSorter sorter = new SelectionSorter(pts);
+        sorter.sort(2);
+        System.out.println(sorter.toString());
+        assertArrayEquals(comparePts, sorter.points);
+
+    }
 }

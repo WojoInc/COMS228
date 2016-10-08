@@ -7,7 +7,7 @@ import java.util.InputMismatchException;
 
 /**
  *  
- * @author
+ * @author Thomas Wesolowski
  *
  */
 
@@ -34,6 +34,8 @@ public class SelectionSorter extends AbstractSorter
 	public SelectionSorter(Point[] pts)  
 	{
 		super(pts);
+		algorithm="selection sort";
+		outputFileName="select.txt";
 	}	
 
 	
@@ -45,6 +47,8 @@ public class SelectionSorter extends AbstractSorter
 	public SelectionSorter(String inputFileName) throws InputMismatchException,FileNotFoundException
 	{
 		super(inputFileName);
+		algorithm="selection sort";
+		outputFileName="select.txt";
 	}
 	
 	
@@ -73,7 +77,6 @@ public class SelectionSorter extends AbstractSorter
 					}
 					//if lowest point is not already in the proper position, swap it
 					if (lowest!=j)swap(lowest,j++);
-					if(k==0)
 					k++;
 				}
 				break;
@@ -82,12 +85,13 @@ public class SelectionSorter extends AbstractSorter
 				lowest=0;
 				stopwatch.start();
 				//set lowest point equal to the first point in the array for first iteration
-				while(j<points.length){
+				while(k<points.length){
 					for (int i = j; i < points.length; i++) {
 						if (pointComparator.compare(points[i],points[lowest])<0)lowest =i;
 					}
 					//if lowest point is not already in the proper position, swap it
 					if (lowest!=j)swap(lowest,j++);
+					k++;
 				}
 				break;
 

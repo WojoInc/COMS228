@@ -2,7 +2,7 @@ package edu.iastate.cs228.hw2;
 
 /**
  *  
- * @author
+ * @author Thomas Wesolowski
  *
  */
 
@@ -53,7 +53,7 @@ public class PolarAngleComparator implements Comparator<Point>
 		if (p1.equals(p2)){
             return 0;
         }
-        else if (!p1.equals(referencePoint)) return -1;//condition a
+        else if (p1.equals(referencePoint)) return -1;//condition a
         else if (!p1.equals(referencePoint)&&!p2.equals(referencePoint)&&
                 comparePolarAngle(p1,p2)==-1) return -1;//condition b
         else if (!p1.equals(referencePoint)&&!p2.equals(referencePoint)&&

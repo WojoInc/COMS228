@@ -2,16 +2,13 @@ package edu.iastate.cs228.hw2;
 
 /**
  *  
- * @author
+ * @author Thomas Wesolowski
  *
  */
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.io.FileNotFoundException;
-import java.lang.IllegalArgumentException; 
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -50,6 +47,7 @@ public abstract class AbstractSorter
 
 
 	protected Stopwatch stopwatch = new Stopwatch();
+	private String statsMask="                                    ";
 	// Add other protected or private instance variables you may need. 
 	
 	protected AbstractSorter()
@@ -71,6 +69,10 @@ public abstract class AbstractSorter
 		if(pts.length==0||pts==null) throw new IllegalArgumentException();
 		points = pts.clone();
 
+		for (Point p :
+				points) {
+			if (lowestPoint==null || lowestPoint.compareTo(p) > 0)lowestPoint=p;
+		}
 	}
 
 	
@@ -96,6 +98,10 @@ public abstract class AbstractSorter
 			}
 		}
 		temp.toArray(points);
+		for (Point p :
+				points) {
+			if (lowestPoint==null || lowestPoint.compareTo(p) > 0)lowestPoint=p;
+		}
 	}
 	
 
@@ -132,8 +138,9 @@ public abstract class AbstractSorter
 	 */
 	public String stats()
 	{
-		return null; 
-		// TODO 
+		algorithm = algorithm+ statsMask.substring(0,17-algorithm.length());
+		String size = points.length + statsMask.substring(0,9-(new String(""+points.length).length()));
+		return algorithm + size + sortingTime;
 	}
 	
 	
@@ -148,7 +155,7 @@ public abstract class AbstractSorter
 		String output = "";
 		for (Point p :
 				points) {
-			output = output + "\n" + p.toString();
+			output = output + "\n" + p.getX() + " " + p.getY();
 		}
 		return output;
 	}
@@ -159,19 +166,30 @@ public abstract class AbstractSorter
 	 * sortByAngle, as detailed in Section 4.1. Then create a Plot object to call the method myFrame().  
 	 */
 	public void draw()
-	{		
-		int numSegs = 0;  // number of segments to draw 
-
+	{
 		// Based on Section 4.1, generate the line segments to draw for display of the sorting result.
-		// Assign their number to numSegs, and store them in segments[] in the order. 
-		Segment[] segments = new Segment[numSegs]; 
-		
-		// TODO 
-		
 
-		
+		/*
+			Implemented arraylist which is casted to segments[] later for simplicity and shorter code
+			by avoiding unnecessary calculation of number of segments in order to specify array dimensions
+			for segments[]
+		 */
+		ArrayList<Segment> segList = new ArrayList<>();
+		if(!sortByAngle){
+			for (int i = 0; i < points.length-1; i++) {
+				segList.add(new Segment(points[i],points[i+1]));
+			}
+		}
+		else {
+			for (int i = 1; i < points.length; i++) {
+				segList.add(new Segment(points[0],points[i]));
+			}
+		}
+		Segment[] segments = new Segment[segList.size()];
+		segList.toArray(segments);
+
 		// The following statement creates a window to display the sorting result.
-		Plot.myFrame(points, segments, getClass().getName());
+		Plot.myFrame(points,segments, getClass().getName());
 		
 	}
 		
@@ -209,5 +227,15 @@ public abstract class AbstractSorter
 		Point tmp = points[i];
 		points[i] = points[j];
 		points[j] = tmp;
-	}	
+	}
+	protected void writeToFile(){
+		File f = new File(outputFileName);
+		try {
+			PrintWriter w = new PrintWriter(f);
+			w.write(this.toString());
+			w.close();
+		} catch (IOException e) {
+			System.out.println("Could not output results to file!");
+		}
+	}
 }

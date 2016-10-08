@@ -8,7 +8,7 @@ import java.util.InputMismatchException;
 
 /**
  *  
- * @author
+ * @author Thomas Wesolowski
  *
  */
 
@@ -34,8 +34,9 @@ public class InsertionSorter extends AbstractSorter
 	 */
 	public InsertionSorter(Point[] pts) 
 	{
-
 		super(pts);
+		algorithm="insertion sort";
+		outputFileName="insert.txt";
 	}	
 
 	
@@ -47,6 +48,8 @@ public class InsertionSorter extends AbstractSorter
 	public InsertionSorter(String inputFileName) throws FileNotFoundException,InputMismatchException
 	{
 		super(inputFileName);
+		algorithm="insertion sort";
+		outputFileName="insert.txt";
 	}
 	
 	

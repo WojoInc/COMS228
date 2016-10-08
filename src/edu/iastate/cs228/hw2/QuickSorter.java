@@ -6,7 +6,7 @@ import java.util.InputMismatchException;
 
 /**
  *  
- * @author
+ * @author Thomas Wesolowski
  *
  */
 
@@ -34,6 +34,8 @@ public class QuickSorter extends AbstractSorter
 	public QuickSorter(Point[] pts)
 	{
 		super(pts);
+		algorithm="quicksort";
+		outputFileName="quick.txt";
 	}
 		
 
@@ -45,6 +47,8 @@ public class QuickSorter extends AbstractSorter
 	public QuickSorter(String inputFileName) throws FileNotFoundException,InputMismatchException
 	{
 		super(inputFileName);
+		algorithm="quicksort";
+		outputFileName="quick.txt";
 	}
 
 

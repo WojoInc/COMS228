@@ -2,7 +2,7 @@ package edu.iastate.cs228.hw2;
 
 /**
  *  
- * @author
+ * @author Thomas Wesolowski
  *
  */
 
@@ -15,8 +15,8 @@ package edu.iastate.cs228.hw2;
  */
 
 import java.io.FileNotFoundException;
-import java.util.Scanner; 
-import java.util.Random; 
+import java.util.Random;
+import java.util.Scanner;
 
 
 public class CompareSorters 
@@ -28,8 +28,19 @@ public class CompareSorters
 	 * 
 	 * @param args
 	 **/
-	public static void main(String[] args) 
-	{		
+
+	private static int order;
+	private static boolean fromFile;
+	private static String filename;
+	private static Scanner s = new Scanner(System.in);
+	private static int numPts;
+	private static Random rand = new Random();
+	private static String intro = "Comparison of Four Sorting Algorithms\n" +
+			"keys:  1 (random integers)  2 (File Input)  3 (exit)\n" +
+			"order: 1 (by x-coordinate)  2 (by polar angle)";
+	private static String statsHeader = "\nAlgorithm        size     time (ns)\n" +
+										  "------------------------------------\n";
+	public static void main(String[] args) {
 		// TODO 
 		// 
 		// Conducts multiple sorting rounds. In each round, performs the following: 
@@ -44,14 +55,67 @@ public class CompareSorters
 		//    d) Meanwhile, prints out the table of runtime statistics.
 		// 
 		// A sample scenario is given in Section 2 of the project description. 
-		// 	
-		AbstractSorter[] sorters = new AbstractSorter[4]; 
-		
-		// Within a sorting round, have each sorter object call the sort and draw() methods
-		// in the AbstractSorter class.  You can visualize the result of each sort. (Windows 
-		// have to be closed manually before rerun.)  Also, print out the statistics table 
-		// (cf. Section 2). 
-		
+		//
+		System.out.println(intro);
+		int choice1 = 0;
+		int trial = 0;
+		while (choice1 != 3) {
+			System.out.print("\nTrial " + ++trial + ": ");
+			while (!(choice1 > 0 && choice1 < 4)) choice1 = s.nextInt();
+			if (choice1 == 1) {
+				System.out.print("\nEnter number of random points: ");
+				while (numPts < 1) numPts = s.nextInt();
+
+			} else if (choice1 == 2) {
+				System.out.print("\nPoints from a file");
+				System.out.print("\nFile name: ");
+				filename = s.next();
+
+			} else break;
+
+			System.out.print("Order used in sorting: ");
+			while (order < 1) order = s.nextInt();
+			//skip two lines to make things look pretty
+			System.out.println();
+			System.out.println();
+			System.out.print(statsHeader);
+
+			AbstractSorter[] sorters = new AbstractSorter[4];
+			//initialize sorters
+			try {
+				if (choice1==2) {
+					sorters[0] = new QuickSorter(filename);
+					sorters[1] = new MergeSorter(filename);
+					sorters[2] = new SelectionSorter(filename);
+					sorters[3] = new InsertionSorter(filename);
+				} else if(choice1 == 1) {
+					sorters[0] = new QuickSorter(generateRandomPoints(numPts, rand));
+					sorters[1] = new MergeSorter(generateRandomPoints(numPts, rand));
+					sorters[2] = new SelectionSorter(generateRandomPoints(numPts, rand));
+					sorters[3] = new InsertionSorter(generateRandomPoints(numPts, rand));
+				}
+				//run sorter rounds
+				for (AbstractSorter sorter :
+						sorters) {
+					sorter.sort(order);
+					sorter.draw();
+					System.out.println(sorter.stats());
+					sorter.writeToFile();
+				}
+			} catch (FileNotFoundException ex) {
+				System.out.println("Could not find file! Please try again.");
+			}
+			// Within a sorting round, have each sorter object call the sort and draw() methods
+			// in the AbstractSorter class.  You can visualize the result of each sort. (Windows
+			// have to be closed manually before rerun.)  Also, print out the statistics table
+			// (cf. Section 2).
+
+			choice1 = 0;
+			numPts = 0;
+			filename = "";
+			order = 0;
+		}
+
 	}
 	
 	
@@ -69,10 +133,10 @@ public class CompareSorters
 	public static Point[] generateRandomPoints(int numPts, Random rand) throws IllegalArgumentException
 	{
 		if(numPts <1) throw new IllegalArgumentException("Enter number of points greater than or equal to 1");
-		for (int i = 0; i < numPts + 1; i++) {
-
+		Point[] points = new Point[numPts];
+		for (int i = 0; i < numPts; i++) {
+			points[i]=new Point(rand.nextInt(101)-50,rand.nextInt(101)-50);
 		}
-		return null; 
-		// TODO 
+		return points;
 	}
 }

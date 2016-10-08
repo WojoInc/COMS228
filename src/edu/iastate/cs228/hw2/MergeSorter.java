@@ -5,7 +5,7 @@ import java.util.InputMismatchException;
 
 /**
  *  
- * @author
+ * @author Thomas Wesolowski
  *
  */
 
@@ -34,6 +34,8 @@ public class MergeSorter extends AbstractSorter
 	public MergeSorter(Point[] pts) 
 	{
 		super(pts);
+		algorithm="mergesort";
+		outputFileName="merge.txt";
 	}
 	
 	
@@ -45,6 +47,8 @@ public class MergeSorter extends AbstractSorter
 	public MergeSorter(String inputFileName) throws FileNotFoundException,InputMismatchException
 	{
 		super(inputFileName);
+		algorithm="mergesort";
+		outputFileName="merge.txt";
 	}
 
 
@@ -90,10 +94,10 @@ public class MergeSorter extends AbstractSorter
 		int m=0;
 		if(b < e){
 			m=(b+e)/2;
-
 			mergeSortRec(pts,b,m);
 			mergeSortRec(pts,m+1,e);
 			merge(pts,b,m,e);
+
 		}
 		points = pts;
 		
@@ -128,7 +132,7 @@ public class MergeSorter extends AbstractSorter
 		 */
 		while(i<=m)temp[k++]=pts[i++];
 		while(j<=e)temp[k++]=pts[j++];
-		for (i = b; i < e ; i++){
+		for (i = b; i <=e ; i++){
 			pts[i] = temp[i];
 		}
 	}

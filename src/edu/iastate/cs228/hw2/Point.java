@@ -2,7 +2,7 @@
 
 /**
  *  
- * @author
+ * @author Thomas Wesolowski
  *
  */
 
