@@ -1,6 +1,7 @@
 package edu.iastate.cs228.hw3;
 
-import java.io.FileNotFoundException; 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Scanner;
 import java.util.Comparator;
 
@@ -29,7 +30,13 @@ public class DoublySortedList
 	  */
 	 public DoublySortedList()
 	 {
-		 //	TODO
+		 size=0;
+		 headN = new Node();
+		 headB = new Node();
+		 headN.nextN=headN;
+		 headN.previousN=headN;
+		 headB.previousB=headB;
+		 headB.nextB=headB;
 	 }
 	 
 	 
@@ -52,7 +59,14 @@ public class DoublySortedList
 	  */
 	 public DoublySortedList(String inventoryFile) throws FileNotFoundException
 	 {
-		 // TODO 
+		 File f = new File(inventoryFile);
+		 Scanner s = new Scanner(f);
+		 headN = new Node(s.next(),s.nextInt(),s.nextInt(),null,null,null,null);
+		 headB = new Node(headN.fruit,headN.quantity,headN.bin,null,null,null,null);
+		 Node walkerN;
+		 while (s.hasNextLine()){
+
+		 }
 	 }
 	 
 	 

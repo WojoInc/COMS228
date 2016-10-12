@@ -47,8 +47,6 @@ public class Node
      */
     public String toString() 
     {
-    	// TODO 
-    	
-        return null; 
+        return fruit + " " + quantity + " " + bin;
     }
 }
