@@ -122,17 +122,21 @@ public class DoublySortedList implements Iterable
 		 Node node = queryN(fruit);
 		 if(node!=null)node.quantity+=n;
 		 else{
-			 node = headB;
-			 for (int i = node.nextB.bin; i <= size; i=node.bin) {
-				 if(i<node.nextB.bin||size==0){
-					 Node insert = new Node(fruit,n,i+1,null,null,null,null);
-					 insertB(insert,null,null);
+			 int i =1;
+			 for (Node b = headB.nextB; b!=headB; b=b.nextB) {
+				 if(i<b.bin||b.bin==0){
+					 Node insert = new Node(fruit,n,i,null,null,null,null);
+					 insertB(insert,b.previousB.previousB,b);
 					 insertN(insert,null,null);
 					 this.size++;
 					 return;
 				 }
-				 else node=node.nextB;
+				 i=b.bin+1;
+
 			 }
+			 Node insert = new Node(fruit,n,1,headN,headN,headB,headB);
+			 insertB(insert,headB,headB);
+			 insertN(insert,headN,headN);
 		 }
 	 }
 	 
@@ -417,7 +421,7 @@ public class DoublySortedList implements Iterable
 		 int i = 0;
 		 for(Node n = headN.nextN; n!=headN||i==0; n = n.nextN){
 			 //if node to insert is less than next node, or the list is empty
-			 if(size==0||ncomp.compare(node,n)<0){
+			 if(size==0||ncomp.compare(node,n)<0||n==headN){
 				 node.previousN = n.previousN;
 				 node.nextN = n.nextN;
 				 n.previousN = n.previousN.nextN = node;
@@ -440,20 +444,9 @@ public class DoublySortedList implements Iterable
 	  */
 	 private void insertB(Node node, Node prev, Node next)
 	 {
-		 int i = 0;
-		 for(Node n = headB.nextB; n!=headB||i==0; n = n.nextB){
-			 //if node to insert is less than next node, or the list is empty
-			 if(size==0||bcomp.compare(node,n)<0){
-				 node.previousB = n.previousB;
-				 node.nextB = n.nextB;
-				 n.previousB = n.previousB.nextB = node;
-				 prev = node.previousB;
-				 next = node.nextB;
-				 return;
-			 }
-			 i++;
-		 }
-
+		 node.previousB = prev;
+		 node.nextB = next;
+		 prev.nextB = next.previousB = node;
 	 }
 	 
 	 
