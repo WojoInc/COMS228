@@ -1,9 +1,11 @@
 package edu.iastate.cs228.hw3;
 
+import com.sun.istack.internal.NotNull;
+
+import javax.swing.text.html.HTMLDocument;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Scanner;
-import java.util.Comparator;
+import java.util.*;
 
 /**
  * 
@@ -17,11 +19,14 @@ import java.util.Comparator;
  *
  */
 
-public class DoublySortedList 
+public class DoublySortedList implements Iterable
 {
 	 private int size;     			// number of different kinds of fruits	 
 	 private Node headN; 			// dummy node as the head of the sorted linked list by fruit name 
 	 private Node headB; 			// dummy node as the head of the sorted linked list by bin number
+	 private NameComparator ncomp = new NameComparator();
+	 private BinComparator bcomp = new BinComparator();
+	 private char sort;
 
 	 /**
 	  *  Default constructor constructs an empty list. Initialize size. Set the fields nextN and 
@@ -33,10 +38,10 @@ public class DoublySortedList
 		 size=0;
 		 headN = new Node();
 		 headB = new Node();
-		 headN.nextN=headN;
-		 headN.previousN=headN;
-		 headB.previousB=headB;
-		 headB.nextB=headB;
+		 headN.previousN=headN.nextN=headN;
+		 headB.previousB=headB.nextB=headB;
+		 headN.previousB=headN.nextB=headB;
+		 headB.previousN=headB.nextN=headN;
 	 }
 	 
 	 
@@ -110,7 +115,25 @@ public class DoublySortedList
 	  */
 	 public void add(String fruit, int n) throws IllegalArgumentException
 	 {
-		 // TODO 
+		 if(n==0)return;
+		 else if(n<0) throw new IllegalArgumentException("Cannot add a negative quantity!");
+
+		 //search the N list for the fruit, until we reach the head node, meaning we have wrapped around.
+		 Node node = queryN(fruit);
+		 if(node!=null)node.quantity+=n;
+		 else{
+			 node = headB;
+			 for (int i = node.nextB.bin; i <= size; i=node.bin) {
+				 if(i<node.nextB.bin||size==0){
+					 Node insert = new Node(fruit,n,i+1,null,null,null,null);
+					 insertB(insert,null,null);
+					 insertN(insert,null,null);
+					 this.size++;
+					 return;
+				 }
+				 else node=node.nextB;
+			 }
+		 }
 	 }
 	 
 	 
@@ -147,7 +170,8 @@ public class DoublySortedList
 	  */
 	 public void remove(String fruit)
 	 {
-		 // TODO
+		 Node n = queryN(fruit);
+		 if(n!=null)remove(n);
 	 }
 	 
 	 
@@ -164,7 +188,9 @@ public class DoublySortedList
 	  */
 	 public void remove(int bin) throws IllegalArgumentException
 	 {
-		 // TODO 
+		 if(bin<1)throw new IllegalArgumentException("Bin number is less than 1!");
+		 Node n = queryB(bin);
+		 if(n!=null)remove(n);
 	 }
 	 
 	 
@@ -183,9 +209,39 @@ public class DoublySortedList
 	  */
 	 public void sell(String fruit, int n) throws IllegalArgumentException 
 	 {
-		 // TODO
+		 if(n<0)throw new IllegalArgumentException("Cannot sell negative amount of fruit!");
+
+		 Node node = queryN(fruit);
+		 if(node!=null){
+			 if(node.quantity<=n)remove(node);
+			 else node.quantity -= n;
+		 }
 	 }
-	 
+
+	/**
+	 * Traverses the N-list for a specific fruit and returns the node in the N-list representing the fruit
+	 * @param fruit the name of the fruit to search for
+	 * @return the Node representing the fruit, null if fruit is not found in N-list
+	 */
+	 private Node queryN(@NotNull String fruit) {
+
+		 for (Node n = headN.nextN; n != headN; n = n.nextN) {
+			 if (n.fruit.compareTo(fruit) == 0) return n;
+		 }
+		 return null;
+	 }
+
+	/**
+	 * Traverses the B-list for a specific bin and returns the appropriate node if found
+	 * @param bin the bin to search for
+	 * @return the node representing the bin, or null if the bin does not exist in the B-list
+	 */
+	 private Node queryB(@NotNull int bin){
+		 for (Node b = headB.nextB; b != headB; b = b.nextB) {
+			 if (b.bin == bin) return b;
+		 }
+		 return null;
+	 }
 	 
 	 /** 
 	  * Process an order for multiple fruits as follows.  
@@ -214,9 +270,8 @@ public class DoublySortedList
 	  */
      public int inquire(String fruit)
      {
-    	 // TODO 
-    	 
-    	 return 0;   	 
+		 Node n = queryN(fruit);
+		 return n==null ? 0:n.quantity;
       }
      
 	 
@@ -234,7 +289,7 @@ public class DoublySortedList
 	 */
 	 public String printInventoryN()
 	 {	 
-		 // TODO 
+		 // TODO
 		 
 		 return null; 
 	 }
@@ -288,7 +343,7 @@ public class DoublySortedList
 	  */
 	 public void clearStorage()
 	 {
-		 // TODO 
+		 for(Node n = headN.nextN; n!=headN; n=n.nextN)remove(n);
 	 }
 	 
 	 
@@ -359,7 +414,20 @@ public class DoublySortedList
 	  */
 	 private void insertN(Node node, Node prev, Node next)
 	 {
-		 // TODO 
+		 int i = 0;
+		 for(Node n = headN.nextN; n!=headN||i==0; n = n.nextN){
+			 //if node to insert is less than next node, or the list is empty
+			 if(size==0||ncomp.compare(node,n)<0){
+				 node.previousN = n.previousN;
+				 node.nextN = n.nextN;
+				 n.previousN = n.previousN.nextN = node;
+				 prev = node.previousN;
+				 next = node.nextN;
+				 return;
+			 }
+			 i++;
+		 }
+
 	 }
 	
 	 
@@ -371,8 +439,21 @@ public class DoublySortedList
 	  * @param next  succeeding node 
 	  */
 	 private void insertB(Node node, Node prev, Node next)
-	 {	 
-		 // TODO 
+	 {
+		 int i = 0;
+		 for(Node n = headB.nextB; n!=headB||i==0; n = n.nextB){
+			 //if node to insert is less than next node, or the list is empty
+			 if(size==0||bcomp.compare(node,n)<0){
+				 node.previousB = n.previousB;
+				 node.nextB = n.nextB;
+				 n.previousB = n.previousB.nextB = node;
+				 prev = node.previousB;
+				 next = node.nextB;
+				 return;
+			 }
+			 i++;
+		 }
+
 	 }
 	 
 	 
@@ -383,7 +464,15 @@ public class DoublySortedList
 	  */
 	 private void remove(Node node)
 	 {
-		 // TODO 
+		 //bridges gap between next and previous nodes
+		 node.previousN.nextN=node.nextN;
+		 node.nextN.previousN=node.previousN;
+		 node.previousB.nextB = node.nextB;
+		 node.nextB.previousB = node.previousB;
+		 size--;
+
+		 // sets node = null and relies on garbage collector to handle freeing memory
+		 node =null;
 	 }
 	  
 	 
@@ -409,5 +498,63 @@ public class DoublySortedList
 		 
 		 return 0; 
 	 }
-	  
+
+	@Override
+	public Iterator iterator() {
+		return new DSLItr(headN,sort);
+	}
+	private class DSLItr implements Iterator<Node>{
+
+	private Node lastNode;
+	private Node currNode;
+	private Node nextNode;
+	private char sort;
+
+		public DSLItr(Node index, char sort){
+		currNode= index;
+		this.sort=sort;
+		switch (sort){
+			case 'n':
+				nextNode = currNode.nextN;
+				lastNode = currNode.previousN;
+				break;
+			case 'b':
+				nextNode = currNode.nextB;
+				lastNode = currNode.previousB;
+				break;
+			default:
+				nextNode=currNode=lastNode=null;
+		}
+
+
+	}
+
+	@Override
+	public boolean hasNext() {
+		switch (sort){
+			case 'n':
+				return !(nextNode==null && nextNode == headN);
+			case 'b':
+				return !(nextNode==null) || !(nextNode == headB);
+			default:
+				return false;
+		}
+	}
+
+	@Override
+	public Node next() {
+		currNode = nextNode;
+		switch (sort) {
+			case 'n':
+				nextNode = currNode.nextN;
+				lastNode = currNode.previousN;
+				break;
+			case 'b':
+				nextNode = currNode.nextB;
+				lastNode = currNode.previousB;
+				break;
+		}
+		return currNode;
+	}
+}
 }
