@@ -10,7 +10,7 @@ import java.util.*;
 /**
  *
  * @author Thomas John Wesolowski : wojoinc@iastate.edu
- * Created under Github user WojoInc : wojoinc@gmail.com
+ * Created under Github user WojoInc
  *
  */
 
