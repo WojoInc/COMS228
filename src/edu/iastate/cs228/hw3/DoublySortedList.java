@@ -8,8 +8,9 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 /**
- * 
- * @author 
+ *
+ * @author Thomas John Wesolowski : wojoinc@iastate.edu
+ * Created under Github user WojoInc : wojoinc@gmail.com
  *
  */
 
@@ -19,14 +20,13 @@ import java.util.*;
  *
  */
 
-public class DoublySortedList implements Iterable
+public class DoublySortedList
 {
 	 private int size;     			// number of different kinds of fruits	 
 	 private Node headN; 			// dummy node as the head of the sorted linked list by fruit name 
 	 private Node headB; 			// dummy node as the head of the sorted linked list by bin number
 	 private NameComparator ncomp = new NameComparator();
 	 private BinComparator bcomp = new BinComparator();
-	 private char sort;
 
 	 /**
 	  *  Default constructor constructs an empty list. Initialize size. Set the fields nextN and 
@@ -48,7 +48,7 @@ public class DoublySortedList implements Iterable
 	 /**
 	  * Constructor over an inventory file consists of lines in the following format  
 	  * 
-	  * <fruit>  <quantity>  <bin> 
+	  * fruit  quantity  bin
 	  * 
 	  * Throws an exception if the file is not found. 
 	  * 
@@ -60,7 +60,8 @@ public class DoublySortedList implements Iterable
 	  *     3. Perform insertion sort on the two lists. Use the provided BinComparator and 
 	  *        NameComparator classes to generate comparator objects for the sort.
 	  *        
-	  * @inventoryFile    name of the input file 
+	  * @param inventoryFile    name of the input file
+	  * @throws FileNotFoundException if file does not exist
 	  */
 	 public DoublySortedList(String inventoryFile) throws FileNotFoundException
 	 {
@@ -121,23 +122,17 @@ public class DoublySortedList implements Iterable
 		 //search the N list for the fruit, until we reach the head node, meaning we have wrapped around.
 		 Node node = queryN(fruit);
 		 if(node!=null)node.quantity+=n;
-		 else{
-			 int i =1;
-			 for (Node b = headB.nextB; b!=headB; b=b.nextB) {
-				 if(i<b.bin||b.bin==0){
-					 Node insert = new Node(fruit,n,i,null,null,null,null);
-					 insertB(insert,b.previousB.previousB,b);
-					 insertN(insert,null,null);
-					 this.size++;
-					 return;
-				 }
-				 i=b.bin+1;
 
-			 }
-			 Node insert = new Node(fruit,n,1,headN,headN,headB,headB);
-			 insertB(insert,headB,headB);
-			 insertN(insert,headN,headN);
+
+		 else{
+			 Node insert = new Node();
+			 insert.fruit=fruit;
+			 insert.quantity = n;
+			 insertB(insert,null,null);
+			 insertN(insert,null,null);
+			 size++;
 		 }
+
 	 }
 	 
 	 
@@ -416,22 +411,23 @@ public class DoublySortedList implements Iterable
 	  * @param prev  preceding node after addition 
 	  * @param next  succeeding node 
 	  */
-	 private void insertN(Node node, Node prev, Node next)
+	 private void insertN(@NotNull Node node, @NotNull Node prev, @NotNull Node next)
 	 {
-		 int i = 0;
-		 for(Node n = headN.nextN; n!=headN||i==0; n = n.nextN){
-			 //if node to insert is less than next node, or the list is empty
-			 if(size==0||ncomp.compare(node,n)<0||n==headN){
-				 node.previousN = n.previousN;
+		 for(Node n =headN.nextN; n!=headN; n=n.nextN) {
+			 if(node.fruit.compareTo(n.fruit)>0 && (n.nextN==headN||node.fruit.compareTo(n.nextN.fruit)<0)){
+				 node.previousN = n;
 				 node.nextN = n.nextN;
-				 n.previousN = n.previousN.nextN = node;
-				 prev = node.previousN;
+				 n.nextN = n.nextN.previousN = node;
 				 next = node.nextN;
+				 prev = node.previousN;
 				 return;
 			 }
-			 i++;
 		 }
-
+		 node.previousN = headN;
+		 node.nextN = headN;
+		 headN.nextN = headN.previousN = node;
+		 next = node.nextN;
+		 prev = node.previousN;
 	 }
 	
 	 
@@ -442,11 +438,27 @@ public class DoublySortedList implements Iterable
 	  * @param prev  preceding node 
 	  * @param next  succeeding node 
 	  */
-	 private void insertB(Node node, Node prev, Node next)
+	 private void insertB(@NotNull Node node, @NotNull Node prev, @NotNull Node next)
 	 {
-		 node.previousB = prev;
-		 node.nextB = next;
-		 prev.nextB = next.previousB = node;
+		 for(Node b = headB.nextB; b!=headB; b=b.nextB) {
+			 if(b.bin>1)break;
+			 if(b.nextB.bin-b.bin>=2 || b.nextB==headB){
+				 node.previousB = b;
+				 node.nextB = b.nextB;
+				 b.nextB = b.nextB.previousB = node;
+				 node.bin = b.bin + 1;
+				 next = node.nextB;
+				 prev = node.previousB;
+				 return;
+			 }
+		 }
+		 node.previousB = headB;
+		 node.nextB = headB.nextB;
+		 if(size==0) headB.nextB = headB.previousB = node;
+		 else headB.nextB = headB.previousB.previousB = node;
+		 node.bin=1;
+		 next = node.nextB;
+		 prev = node.previousB;
 	 }
 	 
 	 
@@ -463,7 +475,6 @@ public class DoublySortedList implements Iterable
 		 node.previousB.nextB = node.nextB;
 		 node.nextB.previousB = node.previousB;
 		 size--;
-
 		 // sets node = null and relies on garbage collector to handle freeing memory
 		 node =null;
 	 }
@@ -492,62 +503,4 @@ public class DoublySortedList implements Iterable
 		 return 0; 
 	 }
 
-	@Override
-	public Iterator iterator() {
-		return new DSLItr(headN,sort);
-	}
-	private class DSLItr implements Iterator<Node>{
-
-	private Node lastNode;
-	private Node currNode;
-	private Node nextNode;
-	private char sort;
-
-		public DSLItr(Node index, char sort){
-		currNode= index;
-		this.sort=sort;
-		switch (sort){
-			case 'n':
-				nextNode = currNode.nextN;
-				lastNode = currNode.previousN;
-				break;
-			case 'b':
-				nextNode = currNode.nextB;
-				lastNode = currNode.previousB;
-				break;
-			default:
-				nextNode=currNode=lastNode=null;
-		}
-
-
-	}
-
-	@Override
-	public boolean hasNext() {
-		switch (sort){
-			case 'n':
-				return !(nextNode==null && nextNode == headN);
-			case 'b':
-				return !(nextNode==null) || !(nextNode == headB);
-			default:
-				return false;
-		}
-	}
-
-	@Override
-	public Node next() {
-		currNode = nextNode;
-		switch (sort) {
-			case 'n':
-				nextNode = currNode.nextN;
-				lastNode = currNode.previousN;
-				break;
-			case 'b':
-				nextNode = currNode.nextB;
-				lastNode = currNode.previousB;
-				break;
-		}
-		return currNode;
-	}
-}
 }

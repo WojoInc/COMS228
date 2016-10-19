@@ -6,7 +6,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Created by wesolowski.thomas on 10/16/2016.
+ * Created by Thomas John Wesolowski : wojoinc@iastate.edu on 10/16/2016.
+ * Created under Github user WojoInc : wojoinc@gmail.com
  */
 public class DoublySortedListTest {
     DoublySortedList dsl;
