@@ -83,6 +83,18 @@ public class DoublySortedListTest {
     @Test
     public void compactStorage() throws Exception {
 
+        dsl.add("Apple",10);
+        dsl.add("Orange",16);
+        dsl.add("Banana",12);
+        dsl.add("Peach",16);
+        dsl.add("Grape",19);
+        dsl.add("Lime",16);
+        dsl.remove("Apple");
+        dsl.remove("Peach");
+        dsl.remove("Grape");
+        dsl.compactStorage();
+        dsl.add("Kiwi",59);
+
     }
 
     @Test

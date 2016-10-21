@@ -333,7 +333,9 @@ public class DoublySortedList
 	 // 
 	 public void compactStorage()
 	 {
-		 // TODO 
+		 for(Node b=headB.nextB; b!=headB; b=b.nextB){
+			 if(b.bin-b.previousB.bin>=2)b.bin=b.previousB.bin+1;
+		 }
 	 }
 	 
 	 
@@ -441,7 +443,7 @@ public class DoublySortedList
 	 private void insertB(@NotNull Node node, @NotNull Node prev, @NotNull Node next)
 	 {
 		 for(Node b = headB.nextB; b!=headB; b=b.nextB) {
-			 if(b.bin>1)break;
+			 if(headB.nextB.bin>1)break;
 			 if(b.nextB.bin-b.bin>=2 || b.nextB==headB){
 				 node.previousB = b;
 				 node.nextB = b.nextB;
