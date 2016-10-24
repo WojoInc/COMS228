@@ -4,3 +4,4 @@ banana 1005 3
 orange 1 1
 grape 25 6
 pineapple 15 205
+pear 25 66
