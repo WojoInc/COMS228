@@ -1,8 +1,6 @@
 package edu.iastate.cs228.hw3;
 
 import com.sun.istack.internal.NotNull;
-
-import javax.swing.text.html.HTMLDocument;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
@@ -27,6 +25,7 @@ public class DoublySortedList
 	 private Node headB; 			// dummy node as the head of the sorted linked list by bin number
 	 private NameComparator ncomp = new NameComparator();
 	 private BinComparator bcomp = new BinComparator();
+	private String statsMask="                                    ";
 
 	 /**
 	  *  Default constructor constructs an empty list. Initialize size. Set the fields nextN and 
@@ -65,14 +64,39 @@ public class DoublySortedList
 	  */
 	 public DoublySortedList(String inventoryFile) throws FileNotFoundException
 	 {
+		 //init head nodes
+		 size=0;
+		 headN = new Node();
+		 headB = new Node();
+		 headN.previousN=headN.nextN=headN;
+		 headB.previousB=headB.nextB=headB;
+		 headN.previousB=headN.nextB=headB;
+		 headB.previousN=headB.nextN=headN;
+
 		 File f = new File(inventoryFile);
 		 Scanner s = new Scanner(f);
-		 headN = new Node(s.next(),s.nextInt(),s.nextInt(),null,null,null,null);
-		 headB = new Node(headN.fruit,headN.quantity,headN.bin,null,null,null,null);
-		 Node walkerN;
-		 while (s.hasNextLine()){
+		 Node walkerN = headN;
+		 Node walkerB = headB;
+		 Node cursor;
 
+		 while (s.hasNextLine()) {
+			 //create blank cursor, get values from line of file
+			 cursor = new Node();
+			 cursor.fruit = s.next();
+			 cursor.quantity = s.nextInt();
+			 cursor.bin = s.nextInt();
+			 //append to n-list
+			 insertN(cursor, walkerN, walkerN.nextN);
+			 //append to b-list
+			 insertB(cursor, walkerB, walkerB.nextB);
+			 //increment walkers
+			 walkerB = walkerB.nextB;
+			 walkerN = walkerN.nextN;
+			 //increment size
+			 size++;
 		 }
+		 insertionSort(true,ncomp);
+		 insertionSort(false,bcomp);
 	 }
 	 
 	 
@@ -116,25 +140,135 @@ public class DoublySortedList
 	  */
 	 public void add(String fruit, int n) throws IllegalArgumentException
 	 {
+		 Node nextB = new Node(), prevB = new Node() , nextN, prevN;
+
+		 //exception handling
 		 if(n==0)return;
 		 else if(n<0) throw new IllegalArgumentException("Cannot add a negative quantity!");
 
 		 //search the N list for the fruit, until we reach the head node, meaning we have wrapped around.
-		 Node node = queryN(fruit);
-		 if(node!=null)node.quantity+=n;
-
-
-		 else{
-			 Node insert = new Node();
-			 insert.fruit=fruit;
-			 insert.quantity = n;
-			 insertB(insert,null,null);
-			 insertN(insert,null,null);
-			 size++;
+		 Node node;
+		 int res;
+		 for(node =headN.nextN; node!=headN; node=node.nextN) {
+			 res = node.fruit.compareTo(fruit);
+			 if(res>=0){
+				 //test if current node.fruit is exactly lexicographically equal to fruit
+				 if(res==0){
+					 node.quantity+=n; //increase quantity, return from method
+					 return;
+				 }
+				 break;
+			 }
 		 }
 
+		 //fruit is new in stock, set prev and next nodes for N list
+		 nextN = node;
+		 prevN = node.previousN;
+		 //create place holder node for insertion
+		 Node insert = new Node();
+		 insert.fruit=fruit;
+		 insert.quantity = n;
+
+		 // search for appropriate location in the B-list
+		 if(headB.nextB.bin>1){
+			 nextB = headB.nextB;
+			 prevB = headB;
+			 insert.bin = 1;
+		 }
+		 else if(size==0){
+			 nextB = headB;
+			 prevB = headB;
+			 insert.bin=1;
+		 }
+		 else {
+			 for (Node b = headB.nextB; b != headB; b = b.nextB) {
+				 if (b.nextB.bin - b.bin >= 2 || b.nextB == headB) {
+					 insert.bin = b.bin + 1;
+					 nextB = b.nextB;
+					 prevB = b;
+					 break;
+				 }
+			 }
+		 }
+		 // insert node into lists, increment size, then return
+		 insertB(insert,prevB,nextB);
+		 insertN(insert,prevN,nextN);
+		 size++;
+
 	 }
-	 
+
+	/**
+	 * Additional add method that allows for recursive calls, assuming that the fruits to be added occur
+	 * in lexicographical order. This limits the length of both the N and B lists that is traversed for each call
+	 * to this method, effectively causing the time complexity of subsequent calls of this method to converge to
+	 * O(log n).
+	 *
+	 * @param fruit name of fruit to be added
+	 * @param n quantity of the fruit
+	 * @param lastN previous node in n list, for recursive calls, should be equal to the node returned by this method.
+	 * @param lastB previous node in b list, for recursive calls, should be equal to the node returned by this method.
+	 * @return the node that was added to the list, used for recursion
+	 */
+	public Node add(String fruit, int n, Node lastN, Node lastB)
+	{
+		Node nextB = new Node(), nextN, prevB = new Node(), prevN;
+
+		//search the N list for the fruit, until we reach the head node, meaning we have wrapped around.
+		Node node;
+		int res;
+		for(node = lastN.nextN; node!=headN; node=node.nextN) {
+			res = node.fruit.compareTo(fruit);
+			if(res>=0){
+				//test if current node.fruit is exactly lexicographically equal to fruit
+				if(res==0){
+					node.quantity+=n; //increase quantity, return from method
+					return node;
+				}
+				break;
+			}
+		}
+
+		//fruit is new in stock, set prev and next nodes for N list
+		nextN = node;
+		prevN = node.previousN;
+		//create place holder node for insertion
+		Node insert = new Node();
+		insert.fruit=fruit;
+		insert.quantity = n;
+
+		// search for appropriate location in the B-list
+		if(headB.nextB.bin>1){
+			nextB = headB.nextB;
+			prevB = headB;
+			insert.bin = 1;
+		}
+		else if(size==0){
+			nextB = headB;
+			prevB = headB;
+			insert.bin=1;
+		}
+		else {
+			if(lastB.nextB == headB){
+				insert.bin = lastB.bin+1;
+				prevB = lastB;
+				nextB = lastB.nextB;
+			}
+			for (Node b = lastB.nextB; b != headB; b = b.nextB) {
+				if (b.nextB.bin - b.bin >= 2 || b.nextB == headB) {
+					insert.bin = b.bin + 1;
+					nextB = b.nextB;
+					prevB = b;
+					break;
+				}
+			}
+
+		}
+		// insert node into lists, increment size, then return
+		insertB(insert,prevB,nextB);
+		insertN(insert,prevN,nextN);
+		size++;
+		return insert;
+	}
 	 
 	 /**
 	  * The fruit list is not sorted.  For efficiency, you need to sort by name using quickSort. 
@@ -147,13 +281,41 @@ public class DoublySortedList
 	  * 
 	  * @param fruitFile                  list of fruits with quantities. one type of fruit 
 	  *                                   followed by its quantity per line.
-	  * @throws FileNotFoundException
+	  * @throws FileNotFoundException	  if file not found
 	  * @throws IllegalArgumentException  if the quantity specified for some fruit in fruitFile 
 	  *                                   is negative.
 	  */
 	 public void restock(String fruitFile) throws FileNotFoundException, IllegalArgumentException
 	 {
-		 // TODO
+		 File f = new File(fruitFile);
+		 Scanner s = new Scanner(f);
+		 ArrayList fruit = new ArrayList<String>(), quant = new ArrayList<Integer>();
+		 String sCursor;
+		 Integer iCursor;
+		 //get fruits from file, and create arrays.
+		 while (s.hasNextLine()){
+			 sCursor = s.next();
+			 fruit.add(sCursor);
+			 iCursor = s.nextInt();
+			 if(iCursor>=0)quant.add(iCursor);
+			 else throw new IllegalArgumentException("Negative quantity in fruitFile!");
+		 }
+		 String[] fruitName = new String[fruit.size()];
+		 Integer[] fruitQuant = new	Integer[quant.size()];
+		 fruit.toArray(fruitName);
+		 quant.toArray(fruitQuant);
+
+		 //perform recursive quicksort
+		 quickSort(fruitName,fruitQuant,0,fruitName.length-1);
+
+		 //add sorted fruits to n and b lists
+		 //this for loop implies i time, where i= number of fruits to add
+		 Node n = add(fruitName[0],fruitQuant[0],headN,headB);
+		 for (int i =1; i<fruitName.length; i++) {
+			 //this statement, when called recursively, carries log(i) time
+			 n = add(fruitName[i],fruitQuant[i],n,n);
+		 }
+		 //total time = i log i
 	 }
 
 	 
@@ -218,6 +380,52 @@ public class DoublySortedList
 	 }
 
 	/**
+	 * Additional sell method that allows for recursion by specifying the lastN value to be the last Node
+	 * returned by this method. This will resume traversal of the N-list at the point which the last traversal
+	 * left off, reducing the time needed to traverse when using an array of fruits that has been pre-sorted.
+	 *
+	 * @param fruit the fruit to search for
+	 * @param n the amount of fruit to remove, cannot be negative
+	 * @param lastN the last node which the previous call to this method returned
+	 * @throws IllegalArgumentException returns message stating that a negative integer for 'n' has been detected
+	 * @return the node the traversal ended on
+	 */
+	public Node sell(String fruit, int n, Node lastN) throws IllegalArgumentException
+	{
+		if(n<0)throw new IllegalArgumentException("Cannot sell negative amount of fruit!");
+		if(n==0) return lastN;
+
+		Node nextN, prevN;
+
+		//search the N list for the fruit, until we reach the head node, meaning we have wrapped around.
+		Node node;
+		int res;
+		for(node = lastN.nextN; node!=headN; node=node.nextN) {
+			res = node.fruit.compareTo(fruit);
+			if(res>=0){
+				//test if current node.fruit is exactly lexicographically equal to fruit
+				if(res==0){
+
+					/* if n is greater than quantity, remove node, and then return the preceding node
+					 * to compensate for gap created by the removal of the current node during the next
+					 * traversal
+					 */
+					if(n >= node.quantity){
+						Node tmp = node.previousN;
+						remove(node);
+						return tmp;
+					}
+					//if n < node.quantity
+					node.quantity-=n; //decrease quantity, return from method
+					return node;
+				}
+				break;
+			}
+		}
+		return node;
+	}
+
+	/**
 	 * Traverses the N-list for a specific fruit and returns the node in the N-list representing the fruit
 	 * @param fruit the name of the fruit to search for
 	 * @return the Node representing the fruit, null if fruit is not found in N-list
@@ -254,11 +462,38 @@ public class DoublySortedList
 	  *        c) if 0 < m < node.quantity, decrease node.quantity by n. 
 	  *        d) if m >= node.quanity, call remove(node).
 	  * 
-	  * @param fruitFile
+	  * @param fruitFile file to read from
 	  */
 	 public void bulkSell(String fruitFile) throws FileNotFoundException, IllegalArgumentException
 	 {
-		 // TODO 
+		 File f = new File(fruitFile);
+		 Scanner s = new Scanner(f);
+		 ArrayList fruit = new ArrayList<String>(), quant = new ArrayList<Integer>();
+		 String sCursor;
+		 Integer iCursor;
+		 //get fruits from file, and create arrays.
+		 while (s.hasNextLine()){
+			 sCursor = s.next();
+			 fruit.add(sCursor);
+			 iCursor = s.nextInt();
+			 quant.add(iCursor);
+		 }
+		 String[] fruitName = new String[fruit.size()];
+		 Integer[] fruitQuant = new	Integer[quant.size()];
+		 fruit.toArray(fruitName);
+		 quant.toArray(fruitQuant);
+
+		 //perform recursive quicksort
+		 quickSort(fruitName,fruitQuant,0,fruitName.length-1);
+
+		 //add sorted fruits to n and b lists
+		 //this for loop implies i time, where i= number of fruits to add
+		 Node n = sell(fruitName[0],fruitQuant[0],headN);
+		 for (int i =1; i<fruitName.length; i++) {
+			 //this statement, when called recursively, carries log(i) time
+			 n = sell(fruitName[i],fruitQuant[i],n);
+		 }
+		 //total time = i log i
 	 }
 	 
 	 
@@ -287,10 +522,17 @@ public class DoublySortedList
 	  * pear      		40      3 
 	 */
 	 public String printInventoryN()
-	 {	 
-		 // TODO
-		 
-		 return null; 
+	 {
+		 String fruit ="", qty="", bin="";
+		 String header = "fruit   \tquantity    bin\n" +
+				 "---------------------------\n";
+		 for(Node n = headN.nextN; n!=headN; n = n.nextN) {
+			 fruit = n.fruit + statsMask.substring(0, 16 - n.fruit.length());
+			 qty = n.quantity + statsMask.substring(0, 8 - (new String("" + n.quantity).length()));
+			 bin = n.bin + "\n";;
+			 header = header + fruit + qty + bin;
+		 }
+		 return header;
 	 }
 	 
 	 /**
@@ -307,22 +549,32 @@ public class DoublySortedList
 	  */
 	 public String printInventoryB()
 	 {
-		 // TODO 
-		 
-		 return null; 
+		 String fruit ="", qty="", bin="";
+		 String header = "bin \tfruit     \tquantity\n" +
+				 "---------------------------\n";
+		 for(Node b = headB.nextB; b!=headB; b = b.nextB) {
+			 bin = b.bin + statsMask.substring(0, 8 - (new String("" + b.bin).length()));
+			 fruit = b.fruit + statsMask.substring(0, 12 - (b.fruit.length()));
+			 qty = b.quantity + "\n";
+			 header = header + bin + fruit + qty;
+		 }
+		 return header;
 	 }
 	 
 	 
 	 @Override
-	 /**
-	  *  The returned string should be printed out according to the format in Section 5.1, 
-	  *  exactly the same required for printInventoryN(). 
-	  */
 	 public String toString()
 	 {
-		 // TODO 
-		 
-		 return null; 
+		 String fruit ="", qty="", bin="";
+		 String header = "fruit   \tquantity    bin\n" +
+				 "---------------------------\n";
+		 for(Node n = headN.nextN; n!=headN; n = n.nextN) {
+			 fruit = n.fruit + statsMask.substring(0, 16 - n.fruit.length());
+			 qty = n.quantity + statsMask.substring(0, 8 - (new String("" + n.quantity).length()));
+			 bin = n.bin + "\n";
+			 header = header + fruit + qty + bin;
+		 }
+		 return header;
 	 }
 	 
 	 
@@ -365,9 +617,60 @@ public class DoublySortedList
 	  */
 	 public Pair<DoublySortedList> split()
 	 {
-		 // TODO 
-		 
-		 return null; 
+		 // TODO fix null pointer issue
+		 Node splitPoint = headN;
+		 Node headN1 = new Node(),
+				 headN2 = new Node(),
+				 headB1 = new Node(),
+				 headB2 = new Node();
+		 DoublySortedList DST1, DST2;
+
+		 //initialize new head nodes
+		 headN1.previousN = headN1.nextN = headN1;
+		 headN2.nextN = headN2.previousN = headN2;
+		 headB1.previousB = headB1.nextB = headB1;
+		 headB2.nextB = headB2.previousB = headB2;
+
+		 //find midpoint of names, rounded down. for odd numbers, DST2 will contain the 1
+		 //extra node.
+		 for(int i = 0; i<= (size/2); i++){
+			 splitPoint = splitPoint.nextN;
+		 }
+
+		 //create new DSLs
+		 DST1 = new DoublySortedList(size/2,headN,headB1);
+		 DST2 = new DoublySortedList(size - size/2,headN,headB2);
+
+		 //Tie up ends of each new N-list
+		 splitPoint.nextN.previousN = headN2;
+		 headN2.nextN=splitPoint.nextN;
+		 headN2.previousN = headN.previousN;
+		 headN.previousN.nextN = headN2;
+
+		 headN1.nextN=headN.nextN;
+		 headN.nextN.previousN = headN1;
+		 headN1.previousN = splitPoint;
+		 splitPoint.nextN = headN1;
+
+		 //begin adding correct nodes into array
+		 Node walkerB1=headB1,walkerB2=headB2, tmp;
+		 for(Node b = headB.nextB; b !=headB; b = tmp){
+			 if(b.fruit!=null && b.fruit.compareTo(splitPoint.fruit)<=0){
+				 tmp = b.nextB;
+				 insertB(b,walkerB1,walkerB1.nextB);
+				 walkerB1 = walkerB1.nextB;
+			 }
+			 else {
+				 tmp = b.nextB;
+				 insertB(b,walkerB2,walkerB2.nextB);
+				 walkerB2 = walkerB2.nextB;
+			 }
+		 }
+
+
+
+
+		 return new Pair(DST1,DST2);
 	 }
 	 
 	 
@@ -382,31 +685,55 @@ public class DoublySortedList
 	  */
 	 public void insertionSort(boolean sortNList, Comparator<Node> comp)
 	 {
-		 // TODO 
+		 //TODO fix issue where first node in resulting list is deleted
+		 boolean end;
+		 Node walker,tmp;
+		 if (sortNList){
+			 for (Node n = headN.nextN; n !=headN; n = n.nextN) {
+				 end=false;
+				 /*
+				  * uses walker node to walk backwards across the list when a node to sort has
+				  * been found, and n to traverse forwards across the list
+				  */
+				 walker= n;
+				 while(!end){
+					 if(walker.previousN.fruit!=null && comp.compare(walker,walker.previousN)<0 ){
+						 tmp = walker.previousN;
+						 remove(walker.previousN);
+						 insertN(tmp,walker,walker.nextN);
+						 n=walker.nextN;
+						 size++;
+					 }
+					 else end=true;
+					 if(walker.previousN==headN)end=true;
+				 }
+			 }
+		 }
+		 else{
+			 for (Node b = headB.nextB; b !=headB; b = b.nextB) {
+				 end=false;
+				 /*
+				  * uses walker node to walk backwards across the list when a node to sort has
+				  * been found, and n to traverse forwards across the list
+				  */
+				 walker= b;
+				 while(!end){
+					 if(comp.compare(walker,walker.previousB)<0 ){
+						 tmp = walker.previousB;
+						 remove(walker.previousB);
+						 insertB(tmp,walker,walker.nextB);
+						 b = walker.nextB;
+						 size++;
+					 }
+					 else end=true;
+					 if(walker.previousB==headB)end=true;
+				 }
+			 }
+		 }
 	 }
-	 
 
-	 /**
-	  * Sort an array of fruit names using quicksort.  After sorting, quant[i] is the 
-	  * quantity of the fruit with name[i].  
-	  * 
-	  * Made a public method for testing by TA. 
-	  * 
-	  * @param size		number of fruit names 
-	  * @param fruit   	array of fruit names 
-	  * @param quant	array of fruit quantities 
-	  */
-	 public void quickSort(String fruit[], Integer quant[], int size)
-	 {
-		 // TODO 
-	 }
-	 
-	 
-	 // --------------
-	 // helper methods 
-	 // --------------
-	 
-	 /**
+
+	/**
 	  * Add a node between two nodes prev and next in the N-list.   
 	  * 
 	  * @param node
@@ -415,21 +742,9 @@ public class DoublySortedList
 	  */
 	 private void insertN(@NotNull Node node, @NotNull Node prev, @NotNull Node next)
 	 {
-		 for(Node n =headN.nextN; n!=headN; n=n.nextN) {
-			 if(node.fruit.compareTo(n.fruit)>0 && (n.nextN==headN||node.fruit.compareTo(n.nextN.fruit)<0)){
-				 node.previousN = n;
-				 node.nextN = n.nextN;
-				 n.nextN = n.nextN.previousN = node;
-				 next = node.nextN;
-				 prev = node.previousN;
-				 return;
-			 }
-		 }
-		 node.previousN = headN;
-		 node.nextN = headN;
-		 headN.nextN = headN.previousN = node;
-		 next = node.nextN;
-		 prev = node.previousN;
+		 node.previousN = prev;
+		 node.nextN = next;
+		 prev.nextN = next.previousN = node;
 	 }
 	
 	 
@@ -442,25 +757,9 @@ public class DoublySortedList
 	  */
 	 private void insertB(@NotNull Node node, @NotNull Node prev, @NotNull Node next)
 	 {
-		 for(Node b = headB.nextB; b!=headB; b=b.nextB) {
-			 if(headB.nextB.bin>1)break;
-			 if(b.nextB.bin-b.bin>=2 || b.nextB==headB){
-				 node.previousB = b;
-				 node.nextB = b.nextB;
-				 b.nextB = b.nextB.previousB = node;
-				 node.bin = b.bin + 1;
-				 next = node.nextB;
-				 prev = node.previousB;
-				 return;
-			 }
-		 }
-		 node.previousB = headB;
-		 node.nextB = headB.nextB;
-		 if(size==0) headB.nextB = headB.previousB = node;
-		 else headB.nextB = headB.previousB.previousB = node;
-		 node.bin=1;
-		 next = node.nextB;
-		 prev = node.previousB;
+		 node.nextB = next;
+		 node.previousB = prev;
+		 prev.nextB = next.previousB = node;
 	 }
 	 
 	 
@@ -480,16 +779,26 @@ public class DoublySortedList
 		 // sets node = null and relies on garbage collector to handle freeing memory
 		 node =null;
 	 }
-	  
-	 
-	 /**
-	  * 
-	  * @param name		name[first, last] is the subarray of fruit names 
-	  * @param bin		bin[first, last] is the subarray of bins storing the fruits.
-	  * @param first
-	  * @param last
-	  */
-	 
+
+	/**
+	 * Sort an array of fruit names using quicksort.  After sorting, quant[i] is the
+	 * quantity of the fruit with name[i].
+	 *
+	 * Made a public method for testing by TA.
+	 *
+	 * @param first		beginning index of fruit names
+	 * @param last		ending index of fruit names
+	 * @param fruit   	array of fruit names
+	 * @param quant	array of fruit quantities
+	 */
+	public void quickSort(String fruit[], Integer quant[], int first, int last)
+	{
+		if (last <= first) return;
+		int j = partition(fruit,quant, first, last);
+		quickSort(fruit, quant, first, j-1);
+		quickSort(fruit, quant, j+1, last);
+	}
+
 	 /**
 	  * 
 	  * @param fruit    array of fruit names 
@@ -500,9 +809,56 @@ public class DoublySortedList
 	  */
 	 private int partition(String fruit[], Integer quant[], int first, int last)
 	 {
-		 // TODO 
-		 
-		 return 0; 
+		 int i = first;
+		 int j = last + 1;
+			while (true) {
+				// find element greater than pivot
+				while (fruit[++i].compareTo(fruit[first]) < 0)
+					if (i == last) break;
+
+				// find element less than pivot
+				while (fruit[first].compareTo(fruit[--j]) < 0)
+					if (j == first) break;
+
+				// check if markers cross
+				if (i >= j) break;
+
+				swap(fruit,i, j);
+				swap(quant,i, j);
+			}
+
+		 // swap pivot element with element at position where markers cross
+		 swap(fruit,first, j);
+		 swap(quant,first, j);
+
+		 //return new midpoint by which to divide into sub-arrays
+		 return j;
 	 }
+
+	/**
+	 * Swap the two elements indexed at i and j respectively in the array objects[].
+	 *
+	 * @param i
+	 * @param j
+	 */
+	private void swap(Integer[] objects, int i, int j)
+	{
+		Integer tmp = objects[i];
+		objects[i] = objects[j];
+		objects[j] = tmp;
+	}
+
+	/**
+	 * Swap the two elements indexed at i and j respectively in the array objects[].
+	 *
+	 * @param i
+	 * @param j
+	 */
+	private void swap(String[] objects, int i, int j)
+	{
+		String tmp = objects[i];
+		objects[i] = objects[j];
+		objects[j] = tmp;
+	}
 
 }
