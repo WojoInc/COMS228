@@ -6,26 +6,17 @@ package edu.iastate.cs228.hw2;
  */
 public class HeapSorter extends AbstractSorter {
 
-    private HeapNode[] tree;
+    HeapSorter(){
+        super();
+        algorithm = "heapsort";
+        outputFileName = "heap.txt";
+    }
 
-    private class HeapNode<T> {
-        public HeapNode subNode0;
-        public HeapNode subNode1;
-        public Comparable<T> value;
-
-        public int compareTo(HeapNode<T> n) {
-            return value.compareTo((T)n.value);
-        }
-        }
-
-        public HeapSorter(Point[] pts){
-            super(pts);
-            algorithm = "heapsort";
-            outputFileName = "heap.txt";
-        }
 
     @Override
     public void sort(int order) throws IllegalArgumentException {
         //TODO implement sorting algortihm
+        int lastBranch = (points.length-3)/2;
+
     }
 }
