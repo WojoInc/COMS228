@@ -1,6 +1,6 @@
 package edu.iastate.cs228.hw4;
 
-import edu.iastate.cs228.hw2.Point;
+import edu.iastate.cs228.hw4.Point;
 
 /**
  * 
@@ -10,16 +10,16 @@ import edu.iastate.cs228.hw2.Point;
  */
 public class Segment 
 {
-	private edu.iastate.cs228.hw2.Point p;
-	private edu.iastate.cs228.hw2.Point q;
+	private edu.iastate.cs228.hw4.Point p;
+	private edu.iastate.cs228.hw4.Point q;
 
-	public Segment(edu.iastate.cs228.hw2.Point p0, edu.iastate.cs228.hw2.Point q0)
+	public Segment(edu.iastate.cs228.hw4.Point p0, edu.iastate.cs228.hw4.Point q0)
 	{
-		p = new edu.iastate.cs228.hw2.Point(p0);
-		q = new edu.iastate.cs228.hw2.Point(q0);
+		p = new edu.iastate.cs228.hw4.Point(p0);
+		q = new edu.iastate.cs228.hw4.Point(q0);
 	}
 
-	public edu.iastate.cs228.hw2.Point getP()
+	public edu.iastate.cs228.hw4.Point getP()
 	{
 		return p;
 	}

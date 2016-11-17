@@ -41,7 +41,6 @@ public class CompareSorters
 	private static String statsHeader = "\nAlgorithm        size     time (ns)\n" +
 										  "------------------------------------\n";
 	public static void main(String[] args) {
-		// TODO 
 		// 
 		// Conducts multiple sorting rounds. In each round, performs the following: 
 		// 

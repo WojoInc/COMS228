@@ -5,7 +5,7 @@ package edu.iastate.cs228.hw4;
  * class. Please do NOT modify it for better display unless you know what you are doing.   
  */
 
-import edu.iastate.cs228.hw2.Point;
+import edu.iastate.cs228.hw4.Point;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,12 +32,12 @@ public class Plot {
 		private int ox = (WINDOW_WIDTH - 1) / 2;
 		private int oy = (WINDOW_WIDTH - 1) / 2;
 
-		private edu.iastate.cs228.hw2.Point[] points; // array of points to draw
+		private edu.iastate.cs228.hw4.Point[] points; // array of points to draw
 		private Segment[] segments; // array of segments to draw
 
-		public MyPanel(edu.iastate.cs228.hw2.Point[] pts, Segment[] segs) {
+		public MyPanel(edu.iastate.cs228.hw4.Point[] pts, Segment[] segs) {
 			int n = pts.length;
-			points = new edu.iastate.cs228.hw2.Point[n];
+			points = new edu.iastate.cs228.hw4.Point[n];
 			for (int i = 0; i < n; i++)
 				points[i] = pts[i];
 
@@ -99,10 +99,8 @@ public class Plot {
 		 * Draw a point with Cartesian coordinates (x, y).
 		 *
 		 * @param g2
-		 * @param x
-		 * @param y
 		 */
-		private void drawPoint(Graphics2D g2, edu.iastate.cs228.hw2.Point p) {
+		private void drawPoint(Graphics2D g2, edu.iastate.cs228.hw4.Point p) {
 			// pixel coordinates of the upper left corner of the square representing the point
 			int px = pixelMin(+p.getX());
 			int py = pixelMin(-p.getY());
@@ -119,15 +117,11 @@ public class Plot {
 		 * Do not modify this method unless you prefer your own display.
 		 *
 		 * @param g2
-		 * @param x1
-		 * @param y1
-		 * @param x2
-		 * @param y2
 		 */
 		private void drawSegment(Graphics2D g2, Segment s) {
 			g2.setPaint(Color.BLUE);
-			edu.iastate.cs228.hw2.Point p = s.getP();
-			edu.iastate.cs228.hw2.Point q = s.getQ();
+			edu.iastate.cs228.hw4.Point p = s.getP();
+			edu.iastate.cs228.hw4.Point q = s.getQ();
 			g2.drawLine(pixelCenter(p.getX()), pixelCenter(-p.getY()), pixelCenter(q.getX()), pixelCenter(-q.getY()));
 		}
 

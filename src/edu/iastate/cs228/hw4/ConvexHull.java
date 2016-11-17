@@ -6,6 +6,8 @@ package edu.iastate.cs228.hw4;
  *
  */
 
+import edu.iastate.cs228.hw2.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.io.File;
@@ -29,8 +31,6 @@ public abstract class ConvexHull
 	// Data Structures 
 	// ---------------
 	protected String algorithm;  // has value either "Graham's scan" or "Jarvis' march". Initialized by a subclass.
-	
-	protected long time;         // execution time in nanoseconds
 	
 	/**
 	 * The array points[] holds an input set of Points, which may be randomly generated or 
@@ -62,7 +62,9 @@ public abstract class ConvexHull
 	
 	protected QuickSortPoints quicksorter;  // used (and reset) by this class and its subclass GrahamScan
 
-	
+    private String statsMask="                                    ";
+    protected Stopwatch stopwatch = new Stopwatch();
+    protected long sortingTime; 	   // execution time in nanoseconds.
 	
 	// ------------
 	// Constructors
@@ -85,8 +87,11 @@ public abstract class ConvexHull
 	 */
 	public ConvexHull(Point[] pts) throws IllegalArgumentException 
 	{
-		// TODO
-		points = pts.clone();
+        if(pts.length==0) throw new IllegalArgumentException("Array is empty!");
+		points = pts;
+        quicksorter = new QuickSortPoints(points);
+        removeDuplicates();
+        lowestPoint = pointsNoDuplicate[0];
 	}
 	
 	/**
@@ -106,7 +111,20 @@ public abstract class ConvexHull
 	 */
 	public ConvexHull(String inputFileName) throws FileNotFoundException, InputMismatchException
 	{
-		// TODO 
+        File f = new File(inputFileName);
+        Scanner s = new Scanner(f);
+        ArrayList<Point> pts = new ArrayList<>();
+        int x,y;
+        while (s.hasNextInt()){
+            x = s.nextInt();
+            y = s.nextInt();
+            pts.add(new Point(x,y));
+        }
+        points = new Point[pts.size()];
+        pts.toArray(points);
+        quicksorter = new QuickSortPoints(points);
+        removeDuplicates();
+        lowestPoint = pointsNoDuplicate[0];
 	}
 
 	
@@ -130,8 +148,9 @@ public abstract class ConvexHull
 	 */
 	public String stats()
 	{
-		return null; 
-		// TODO 
+        algorithm = algorithm+ statsMask.substring(0,17-algorithm.length());
+        String size = points.length + statsMask.substring(0,9-(new String(""+points.length).length()));
+        return algorithm + size + sortingTime;
 	}
 	
 	
@@ -149,9 +168,15 @@ public abstract class ConvexHull
 	 */
 	public String toString()
 	{
-		// TODO 
-		return null; 
-	}
+		String output = "";
+        for (int i = 0; i < hullVertices.length; i++) {
+            for (int j = 0; j < 5; j++) {
+                output = output + hullVertices[i++] + "   ";
+            }
+            output = output + "\n";
+        }
+        return output;
+    }
 	
 	
 	/** 
@@ -179,7 +204,19 @@ public abstract class ConvexHull
 	 */
 	public void writeHullToFile() throws IllegalStateException 
 	{
-		// TODO 
+        if(hullVertices.length==0) throw new IllegalStateException("Hull not constructed");
+
+        File f = new File("hull.txt");
+        try {
+            PrintWriter pw = new PrintWriter(f);
+            for (Point p : hullVertices) {
+                pw.write(p.toString() + "\n");
+            }
+
+        }
+        catch(FileNotFoundException ex){
+            System.out.println("Could not create output file!");
+    }
 	}
 	
 
@@ -189,16 +226,23 @@ public abstract class ConvexHull
 	 * as the edges. Then create a Plot object to call the method myFrame().  
 	 */
 	public void draw()
-	{		
-		int numSegs = 0;  // number of segments to draw 
-
+	{
 		// Based on Section 4.1, generate the line segments to draw for display of the convex hull.
 		// Assign their number to numSegs, and store them in segments[] in the order. 
-		Segment[] segments = new Segment[numSegs]; 
-		
-		// TODO 
-		
 
+		/*
+			Implemented arraylist which is casted to segments[] later for simplicity and shorter code
+			by avoiding unnecessary calculation of number of segments in order to specify array dimensions
+			for segments[]
+		 */
+        ArrayList<Segment> segList = new ArrayList<>();
+            for (int i = 0; i < hullVertices.length-1; i++) {
+                segList.add(new Segment(hullVertices[i],hullVertices[i+1]));
+            }
+            segList.add(new Segment(hullVertices[hullVertices.length-1],hullVertices[0]));
+
+        Segment[] segments = new Segment[segList.size()];
+        segList.toArray(segments);
 		
 		// The following statement creates a window to display the convex hull.
 		Plot.myFrame(pointsNoDuplicate, segments, getClass().getName());
@@ -215,6 +259,18 @@ public abstract class ConvexHull
 	 */
 	public void removeDuplicates()
 	{
-		// TODO 
-	}
+        quicksorter.quickSort(new PointComparator());
+        quicksorter.getSortedPoints(points);
+        ArrayBasedStack<Point> temp = new ArrayBasedStack<>();
+        int j = 0;
+        for (int i = 0; i < points.length; i++) {
+            if(temp.isEmpty()) temp.push(points[i]);
+            else if(points[i].compareTo(temp.peek())!=0) temp.push(points[i]);
+        }
+        int stackHeight = temp.size();
+        pointsNoDuplicate = new Point[stackHeight];
+        for (int i = stackHeight-1; i >= 0; i--) {
+            pointsNoDuplicate[i] = temp.pop();
+        }
+    }
 }

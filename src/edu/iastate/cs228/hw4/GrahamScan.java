@@ -17,14 +17,14 @@ public class GrahamScan extends ConvexHull
 	/**
 	 * Call corresponding constructor of the super class.  Initialize the variables algorithm 
 	 * (from the class ConvexHull) and vertexStack. 
-	 * 
-	 * @param n  number of points 
+	 *
 	 * @throws IllegalArgumentException  if pts.length == 0
 	 */
 	public GrahamScan(Point[] pts) throws IllegalArgumentException 
 	{
 		super(pts); 
-		// TODO 
+		vertexStack = new ArrayBasedStack<>();
+		algorithm = "Graham Scan";
 	}
 	
 
@@ -38,7 +38,8 @@ public class GrahamScan extends ConvexHull
 	public GrahamScan(String inputFileName) throws FileNotFoundException, InputMismatchException
 	{
 		super(inputFileName); 
-		// TODO 
+		algorithm = "Graham Scan";
+        vertexStack = new ArrayBasedStack<>();
 	}
 
 	
@@ -69,13 +70,43 @@ public class GrahamScan extends ConvexHull
 	 */
 	public void constructHull()
 	{
-		// TODO
-	}
+        stopwatch.start();
+		if(pointsNoDuplicate.length==1){
+            hullVertices = new Point[1];
+            hullVertices[0] = pointsNoDuplicate[0];
+            return;
+        }
+        if(pointsNoDuplicate.length==2){
+            hullVertices = new Point[2];
+            hullVertices[0] = pointsNoDuplicate[0];
+            hullVertices[1] = pointsNoDuplicate[1];
+            return;
+        }
+
+        setUpScan();
+
+        vertexStack.push(pointsNoDuplicate[0]);
+        vertexStack.push(pointsNoDuplicate[1]);
+        vertexStack.push(pointsNoDuplicate[2]);
+        for (int i = 3; i < pointsNoDuplicate.length; i++) {
+            while (direction(getBelowTop(),vertexStack.peek(),pointsNoDuplicate[i])!=1)
+            {
+                vertexStack.pop();
+            }
+            vertexStack.push(pointsNoDuplicate[i]);
+        }
+        hullVertices = new Point[vertexStack.size()];
+        for (int i = vertexStack.size()-1; i >=0 ; i--) {
+            hullVertices[i] = vertexStack.pop();
+        }
+        stopwatch.stop();
+        sortingTime = stopwatch.getExeTime();
+    }
 	
 	
 	/**
 	 * Set the variable quicksorter from the class ConvexHull to sort by polar angle with respect 
-	 * to lowestPoint, and call quickSort() from the QuickSortPoints class on pointsNoDupliate[]. 
+	 * to lowestPoint, and call quickSort() from the QuickSortPoints class on pointsNoDuplicate[].
 	 * The argument supplied to quickSort() is an object created by the constructor call 
 	 * PolarAngleComparator(lowestPoint, true).       
 	 * 
@@ -84,6 +115,37 @@ public class GrahamScan extends ConvexHull
 	 */
 	public void setUpScan()
 	{
-		// TODO 
-	}	
+        quicksorter = new QuickSortPoints(pointsNoDuplicate);
+        quicksorter.quickSort(new PolarAngleComparator(lowestPoint, true));
+        quicksorter.getSortedPoints(pointsNoDuplicate);
+    }
+
+    /**
+     * Determine direction of 3 successive points to determine if the points follow a clockwise, straight, or counter
+     * clockwise orientation.
+     * @param p
+     * @param q
+     * @param r
+     * @return
+     */
+    private int direction(Point p, Point q, Point r)
+    {
+        int val = (q.getY() - p.getY()) * (r.getX() - q.getX()) -
+                (q.getX() - p.getX()) * (r.getY() - q.getY());
+
+        if (val == 0) return 0;  // straight line
+        return (val > 0)? -1: 1;  // clockwise or counter clockwise
+    }
+
+    /**
+     * Returns the second element of vertexStack. Used in constructHull().
+     * @return second element in stack
+     */
+    private Point getBelowTop(){
+        Point top = vertexStack.pop();
+        Point second = vertexStack.peek();
+        vertexStack.push(top);
+        return second;
+    }
+
 }

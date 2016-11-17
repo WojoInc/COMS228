@@ -29,12 +29,12 @@ public class QuickSorterTest {
         Point[] pts = new Point[]{new Point(16, 1),
                 new Point(2, 1),
                 new Point(5, 3),
-                new Point(0, 0)};
-        Point[] comparePts = new Point[]{  new Point(0,0),
+                new Point(-1, -1)};
+        Point[] comparePts = new Point[]{  new Point(-1,-1),
                 new Point(16,1),
                 new Point(2,1),
                 new Point(5,3)};
-        AbstractSorter sorter = new QuickSorter(pts);
+        AbstractSorter sorter = new QuickSorter("C:\\Users\\97wes\\IdeaProjects\\COMS228\\src\\edu\\iastate\\cs228\\hw4\\test.txt");
         sorter.sort(2);
         System.out.println(sorter.toString());
         assertArrayEquals(comparePts, sorter.points);

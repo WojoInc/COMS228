@@ -6,7 +6,7 @@ package edu.iastate.cs228.hw4;
  *
  */
 
-import edu.iastate.cs228.hw2.Point;
+import edu.iastate.cs228.hw4.Point;
 
 import java.util.Comparator;
 
@@ -17,18 +17,19 @@ import java.util.Comparator;
  * either or both of p1 and p2 have the same y-coordinate, not to their right. 
  *
  */
-public class PolarAngleComparator implements Comparator<edu.iastate.cs228.hw2.Point>
+public class PolarAngleComparator implements Comparator<edu.iastate.cs228.hw4.Point>
 {
-	private edu.iastate.cs228.hw2.Point referencePoint;
+	private edu.iastate.cs228.hw4.Point referencePoint;
 	private boolean flag;
 
 	/**
 	 *
 	 * @param p reference point
 	 */
-	public PolarAngleComparator(edu.iastate.cs228.hw2.Point p)
+	public PolarAngleComparator(edu.iastate.cs228.hw4.Point p, boolean flag)
 	{
 		referencePoint = p;
+		this.flag = flag;
 	}
 
 	/**
@@ -51,17 +52,16 @@ public class PolarAngleComparator implements Comparator<edu.iastate.cs228.hw2.Po
 	 *          1  otherwise.
 	 *
 	 */
-	public int compare(edu.iastate.cs228.hw2.Point p1, edu.iastate.cs228.hw2.Point p2)
+	public int compare(edu.iastate.cs228.hw4.Point p1, edu.iastate.cs228.hw4.Point p2)
 	{
-		if (p1.equals(p2)){
-            return 0;
+		int angleRes = comparePolarAngle(p1,p2);
+        int distRes = compareDistance(p1,p2);
+
+        if(angleRes!= 0) return angleRes;
+        else {
+            if(flag)return distRes;
+            else return -distRes;
         }
-        else if (p1.equals(referencePoint)) return -1;//condition a
-        else if (!p1.equals(referencePoint)&&!p2.equals(referencePoint)&&
-                comparePolarAngle(p1,p2)==-1) return -1;//condition b
-        else if (!p1.equals(referencePoint)&&!p2.equals(referencePoint)&&
-                compareDistance(p1,p2)==-1&&comparePolarAngle(p1,p2)==0)return -1;//condition c
-		else return 1;
     }
 
 
@@ -78,12 +78,16 @@ public class PolarAngleComparator implements Comparator<edu.iastate.cs228.hw2.Po
 	 *               is less than that of p2.
 	 *            1  otherwise.
 	 */
-    public int comparePolarAngle(edu.iastate.cs228.hw2.Point p1, edu.iastate.cs228.hw2.Point p2)
+    public int comparePolarAngle(edu.iastate.cs228.hw4.Point p1, edu.iastate.cs228.hw4.Point p2)
     {
+        if (p1.equals(referencePoint) && p2.equals(referencePoint)) return 0;
+        if (p1.equals(referencePoint)) return -1;
+        if (p2.equals(referencePoint)) return 1;
+
         int crossp = crossProduct(p1,p2);
 
         if (crossp==0)return 0;
-        else if (p1.equals(referencePoint)||crossp>0)return -1;
+        else if (crossp>0)return -1;
         else return 1;
     }
 
@@ -100,7 +104,7 @@ public class PolarAngleComparator implements Comparator<edu.iastate.cs228.hw2.Po
      * 			 -1   if p1 is closer to referencePoint
      *            1   otherwise (i.e., if p2 is closer to referencePoint)
      */
-    public int compareDistance(edu.iastate.cs228.hw2.Point p1, edu.iastate.cs228.hw2.Point p2)
+    public int compareDistance(edu.iastate.cs228.hw4.Point p1, edu.iastate.cs228.hw4.Point p2)
     {
         /*
         *   compare using dot products, p1(dot)p1 and p2(dot)p2 and compare the resulting values
@@ -121,12 +125,11 @@ public class PolarAngleComparator implements Comparator<edu.iastate.cs228.hw2.Po
      * @param p2
      * @return cross product of two vectors p1 - referencePoint and p2 - referencePoint
      */
-    private int crossProduct(edu.iastate.cs228.hw2.Point p1, edu.iastate.cs228.hw2.Point p2)
+    private int crossProduct(edu.iastate.cs228.hw4.Point p1, edu.iastate.cs228.hw4.Point p2)
     {
     	// TODO
-		int product1 = (p1.getX()-referencePoint.getX()) * p2.getY()-referencePoint.getY();
-		int product2 = (p2.getX()-referencePoint.getX()) * p1.getY()-referencePoint.getY();
-
+		int product1 = (p1.getX()-referencePoint.getX()) * (p2.getY()-referencePoint.getY());
+		int product2 = (p2.getX()-referencePoint.getX()) * (p1.getY()-referencePoint.getY());
     	return product1-product2;
     }
 
@@ -136,10 +139,10 @@ public class PolarAngleComparator implements Comparator<edu.iastate.cs228.hw2.Po
      * @param p2
      * @return dot product of two vectors p1 - referencePoint and p2 - referencePoint
      */
-    private int dotProduct(edu.iastate.cs228.hw2.Point p1, Point p2)
+    private int dotProduct(edu.iastate.cs228.hw4.Point p1, Point p2)
     {
-		int xProduct = (p1.getX()-referencePoint.getX()) * p2.getX()-referencePoint.getX();
-		int yProduct = (p1.getY()-referencePoint.getY()) * p2.getY()-referencePoint.getY();
+		int xProduct = (p1.getX()-referencePoint.getX()) * (p2.getX()-referencePoint.getX());
+		int yProduct = (p1.getY()-referencePoint.getY()) * (p2.getY()-referencePoint.getY());
 
 		return xProduct+yProduct;
     }
