@@ -1,7 +1,5 @@
 package edu.iastate.cs228.hw5;
 
-import edu.iastate.cs228.hw3.Node;
-
 import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.List;
@@ -44,11 +42,11 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	}
 
 	final class Node implements BSTNode<E> {
-		private int count;
-		private E data;
-		private BSTNode<E> left;
-		private BSTNode<E> right;
-		private BSTNode<E> parent;
+		int count;
+		public E data;
+		public BSTNode<E> left;
+		public BSTNode<E> right;
+		public BSTNode<E> parent;
 
 		// TODO add private fields here
 
@@ -96,6 +94,7 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	// TODO add private fields here
 
     private Node root;
+	private int size;
     private static final int _TOP = 2;
     private static final int _BOTTOM = 3;
 
@@ -215,9 +214,7 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 
 	@Override
 	public Iterator<E> iterator() {
-		// TODO
-
-		return null;
+		return new ABTreeIterator();
 	}
 
 	/**
@@ -245,8 +242,10 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	@Override
 	public boolean remove(Object o) {
 		// TODO
-
-		return false;
+		BSTNode node = getBSTNode((E) o);
+		if(node==null) return false;
+		unlinkNode(node);
+		return true;
 	}
 
 	/**
@@ -269,11 +268,10 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	public int size() {
 		// TODO
 
-		return root.count;
+		return size;
 	}
 
 	public BSTNode<E> successor(BSTNode<E> node) {
-		// TODO
         if(node==null) return null;
         else if(node.right()!=null){
             BSTNode<E> curr = node.right();
@@ -300,6 +298,33 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 		// TODO
 
 		return null;
+	}
+
+	private void unlinkNode(BSTNode<E> node){
+		//deal with case where there are two child nodes
+
+		if(node.left() != null && node.right()!=null){
+			BSTNode succ = successor(node);
+			((Node)node).data = (E) succ.data();
+			node = succ;
+		}
+		//node has only one child, left or right, not both
+		//may also have no children, in which case replace is null
+		Node replace = null;
+		if(node.left()!=null)replace = (Node)node.left();
+		else if(node.right()!=null) replace = (Node)node.right();
+
+		//reattach seperated links
+
+		if(node.parent()==null) root = replace;
+		else{
+			if (node==node.parent().left()) ((Node)node.parent()).left = replace;
+			else ((Node)node.parent()).right = replace;
+		}
+		if(replace!=null){
+			replace.parent = node.parent();
+		}
+		--size;
 	}
 
 }
