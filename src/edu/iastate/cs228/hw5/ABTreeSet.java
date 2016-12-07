@@ -1,5 +1,7 @@
 package edu.iastate.cs228.hw5;
 
+import edu.iastate.cs228.hw3.Node;
+
 import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.List;
@@ -50,8 +52,9 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 
 		// TODO add private fields here
 
-		Node(E data) {
-			// TODO
+		Node(E data, BSTNode<E> parent) {
+			this.data = data;
+            this.parent = parent;
 
 		}
 
@@ -92,7 +95,7 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 
 	// TODO add private fields here
 
-    BSTNode<E> head;
+    private Node root;
     private static final int _TOP = 2;
     private static final int _BOTTOM = 3;
 
@@ -146,20 +149,40 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	public boolean add(E e) {
 		// TODO
         if(e==null) throw new NullPointerException("Cannot add null element.");
-        BSTNode newNode = new Node(e);
-        BSTNode parent = newNode.parent();
-        while (parent!=null){
-            parent.updateCount();
-            parent = parent.parent();
+        if(root==null){
+            root = new Node(e,null);
+            root.updateCount();
+            return true;
         }
-		return false;
+        Node curr = root;
+        int res;
+        while (true){
+            res = curr.data().compareTo(e);
+            if(res==0) return false; //already in set
+            else if(res > 0){
+                if(curr.left!=null) curr = (Node)curr.left();
+                else{
+                    curr.left = new Node(e,curr);
+                    curr.left.updateCount();
+                    return true;
+                }
+            }
+            else{
+                if(curr.right!=null) curr = (Node)curr.right();
+                else{
+                    curr.right = new Node(e,curr);
+                    curr.right.updateCount();
+                    return true;
+                }
+            }
+        }
 	}
 
 	@Override
 	public boolean contains(Object o) {
-		// TODO
-
-		return false;
+        if(root==null)return false;
+		if(o.getClass()!= root.data().getClass()) return false;
+        return getBSTNode((E)o)!=null;
 	}
 
 	/**
@@ -167,8 +190,14 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	 * @return BSTNode that contains e, null if e does not exist
 	 */
 	public BSTNode<E> getBSTNode(E e) {
-		// TODO
-
+		BSTNode<E> current = root();
+        int res;
+		while(current!=null){
+            res = current.data().compareTo(e);
+            if(res==0) return current;
+            else if(res > 0) current = current.left();
+            else current = current.right();
+        }
 		return null;
 	}
 
@@ -240,13 +269,30 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	public int size() {
 		// TODO
 
-		return 0;
+		return root.count;
 	}
 
 	public BSTNode<E> successor(BSTNode<E> node) {
 		// TODO
-
-		return null;
+        if(node==null) return null;
+        else if(node.right()!=null){
+            BSTNode<E> curr = node.right();
+            while(curr.left()!=null) curr = curr.left();
+            return curr;
+        }
+        /*
+         * Iterate up the tree to find the node furthest down
+         * that has a left child
+         */
+        else{
+            BSTNode curr = node.parent();
+            BSTNode child = node;
+            while(curr!=null && curr.right() == child){
+                child = curr;
+                curr = curr.parent();
+            }
+            return curr;
+        }
 	}
 
 	@Override
