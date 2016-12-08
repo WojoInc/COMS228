@@ -1,8 +1,6 @@
 package edu.iastate.cs228.hw5;
 
-import java.util.AbstractSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author
@@ -10,33 +8,55 @@ import java.util.List;
 public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 
 	final class ABTreeIterator implements Iterator<E> {
-		// TODO add private fields here
 
-        Node root;
+        //The node keeping track of the iterators place in the tree
         Node cursor;
+        //The node whoose value is accessed by calls to next()
+        Node current;
 
 		ABTreeIterator() {
-
-
+            cursor = root;
+            if(cursor!=null){
+                while(cursor.left!=null){
+                    cursor = (Node)cursor.left;
+                }
+            }
 		}
 
 		@Override
 		public boolean hasNext() {
-			// TODO
-
-			return false;
+			return cursor!=null;
 		}
 
 		@Override
 		public E next() {
-			// TODO
-
-			return null;
+            if(!hasNext()) throw new NoSuchElementException("End of tree reached.");
+            current = cursor;
+            cursor = (Node)successor(cursor);
+			return current.data;
 		}
 
+        public BSTNode<E> nextNode() {
+            if(!hasNext()) throw new NoSuchElementException("End of tree reached.");
+            current = cursor;
+            cursor = (Node)successor(cursor);
+            return current;
+        }
 		@Override
 		public void remove() {
-			// TODO
+            /*
+             * Disallow subsequent calls to remove()
+             */
+			if(current==null) throw new IllegalStateException("No element to remove, must call next() first");
+
+            /*
+             * Copy data from last node accessed by call to next() into the cursor node, then bridge
+             * gaps between links by calling unlinkNode(). Set current node == null, such that
+             * remove may not be run again without first calling next().
+             */
+            if(current.left!=null&&current.right!=null) cursor = current;
+            unlinkNode(current);
+            current = null;
 
 		}
 	}
@@ -47,8 +67,6 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 		public BSTNode<E> left;
 		public BSTNode<E> right;
 		public BSTNode<E> parent;
-
-		// TODO add private fields here
 
 		Node(E data, BSTNode<E> parent) {
 			this.data = data;
@@ -90,8 +108,6 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 			return data.toString();
 		}
 	}
-
-	// TODO add private fields here
 
     private Node root;
 	private int size;
@@ -146,7 +162,6 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	 */
 	@Override
 	public boolean add(E e) {
-		// TODO
         if(e==null) throw new NullPointerException("Cannot add null element.");
         if(root==null){
             root = new Node(e,null);
@@ -207,9 +222,12 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	 * @return an in-order list of all nodes in the given sub-tree.
 	 */
 	public List<BSTNode<E>> inorderList(BSTNode<E> root) {
-		// TODO
-
-		return null;
+        ArrayList<BSTNode<E>> output = new ArrayList<>(size);
+        ABTreeIterator iterator = new ABTreeIterator();
+        while (iterator.hasNext()){
+            output.add(iterator.nextNode());
+        }
+        return output;
 	}
 
 	@Override
@@ -241,7 +259,6 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 
 	@Override
 	public boolean remove(Object o) {
-		// TODO
 		BSTNode node = getBSTNode((E) o);
 		if(node==null) return false;
 		unlinkNode(node);
@@ -266,8 +283,6 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 
 	@Override
 	public int size() {
-		// TODO
-
 		return size;
 	}
 
