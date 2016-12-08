@@ -19,9 +19,7 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 
 		@Override
 		public int compareTo(Entry o) {
-			// TODO
-
-			return 0;
+			return key.compareTo(o.key);
 		}
 
 		@Override
@@ -36,9 +34,9 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 
 		@Override
 		public V setValue(V newValue) {
-			// TODO
-
-			return null;
+			V out = value;
+			value = newValue;
+			return out;
 		}
 
 	}
@@ -93,9 +91,7 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 *         otherwise, it returns false.
 	 */
 	public boolean containsKey(K key) {
-		// TODO
-
-		return false;
+		return entrySet.getBSTNode(new Entry(key, null)) != null;
 	}
 
 	/**
@@ -106,8 +102,11 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 * @return
 	 */
 	public V get(K key) {
-		// TODO
-
+		ABTreeSet<Entry>.Node n = (ABTreeSet.Node)entrySet.getBSTNode(new Entry(key, null));
+		if (n != null)
+		{
+			return n.data.value;
+		}
 		return null;
 	}
 
