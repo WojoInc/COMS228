@@ -271,9 +271,7 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	 * @return the root of the tree.
 	 */
 	public BSTNode<E> root() {
-		// TODO
-
-		return null;
+		return root;
 	}
 
 	public void setSelfBalance(boolean isSelfBalance) {
