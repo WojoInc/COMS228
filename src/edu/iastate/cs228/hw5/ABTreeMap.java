@@ -2,6 +2,7 @@ package edu.iastate.cs228.hw5;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * @author
@@ -122,9 +123,13 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 * @return a ABTreeSet storing the keys (not the values)
 	 */
 	public ABTreeSet<K> keySet() {
-		// TODO
-
-		return null;
+		if (entrySet.root()==null) throw new NoSuchElementException("Set is empty!");
+		ABTreeSet<K> out = new ABTreeSet<K>();
+		ABTreeSet.ABTreeIterator itr = (ABTreeSet.ABTreeIterator)entrySet.iterator();
+		while (itr.hasNext()) {
+			out.add(((Entry)itr.next()).getKey());
+		}
+		return out;
 	}
 
 	/**
@@ -141,7 +146,22 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 */
 	public V put(K key, V value) {
 		// TODO
+		ABTreeSet<Entry>.Node n = (Node)entrySet.getBSTNode(new Entry(key, null));
 
+		V ret = null;
+		if (n != null)
+		{
+			// key is already present, overwrite
+			// value
+			ret = n.data.value;
+			n.data.value = value;
+		}
+		else
+		{
+			entrySet.add(new MapEntry(key, value));
+		}
+
+		return ret;
 		return null;
 	}
 
