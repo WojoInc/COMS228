@@ -48,8 +48,7 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 * Default constructor. Builds a map that uses a non-self-balancing tree.
 	 */
 	public ABTreeMap() {
-		// TODO
-
+		this(false);
 	}
 
 	/**
@@ -61,7 +60,9 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 * @param isSelfBalancing
 	 */
 	public ABTreeMap(boolean isSelfBalancing) {
-		// TODO
+
+		if(isSelfBalancing) entrySet = new ABTreeSet<Entry>(false);
+		else entrySet = new ABTreeSet<Entry>(true);
 
 	}
 
@@ -79,8 +80,9 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 *             if (1/2 < alpha < 1) is false
 	 */
 	public ABTreeMap(boolean isSelfBalancing, int top, int bottom) {
-		// TODO
-
+		if((top/bottom)<(1/2)||(top/bottom)>1) throw new IllegalArgumentException("Values for top and bottom are outside the acceptable range!");
+		if(isSelfBalancing) entrySet = new ABTreeSet<Entry>(false,top,bottom);
+		else entrySet = new ABTreeSet<Entry>(true,top,bottom);
 	}
 
 	/**
@@ -145,24 +147,21 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 *             if key or value is null.
 	 */
 	public V put(K key, V value) {
-		// TODO
-		ABTreeSet<Entry>.Node n = (Node)entrySet.getBSTNode(new Entry(key, null));
 
-		V ret = null;
+		BSTNode<Entry> n = entrySet.getBSTNode(new Entry(key, null));
+
 		if (n != null)
 		{
-			// key is already present, overwrite
-			// value
-			ret = n.data.value;
-			n.data.value = value;
+			//if key already exists, overwrite the associated value and return the original value.
+			V ret = n.data().value;
+			n.data().value = value;
+			return ret;
 		}
 		else
 		{
-			entrySet.add(new MapEntry(key, value));
+			entrySet.add(new Entry(key, value));
+			return null;
 		}
-
-		return ret;
-		return null;
 	}
 
 	/**
@@ -175,8 +174,13 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 *         or null if there was no mapping for key.
 	 */
 	public V remove(K key) {
-		// TODO
-
+		BSTNode<Entry> n = entrySet.getBSTNode(new Entry(key, null));
+		if (n != null)
+		{
+			V ret = n.data().value;
+			entrySet.remove(n);
+			return ret;
+		}
 		return null;
 	}
 
@@ -186,9 +190,7 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 * @return the number of key-value mappings in this map.
 	 */
 	public int size() {
-		// TODO
-
-		return 0;
+		return entrySet.size();
 	}
 
 	@Override
@@ -210,8 +212,10 @@ public class ABTreeMap<K extends Comparable<? super K>, V> {
 	 * @return
 	 */
 	public ArrayList<V> values() {
-		// TODO
-
-		return null;
+		ArrayList<V> out = new ArrayList<V>(size());
+		for (BSTNode<Entry> node : entrySet.inorderList(entrySet.root())) {
+			out.add(node.data().getValue());
+		}
+		return out;
 	}
 }
