@@ -55,6 +55,7 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
              * remove may not be run again without first calling next().
              */
             if(current.left!=null&&current.right!=null) cursor = current;
+            current.updateCount(false);
             unlinkNode(current);
             current = null;
 
@@ -79,8 +80,11 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 			return count;
 		}
 
-		public void updateCount(){
-            count++;
+		public void updateCount(boolean upDown){
+		    if(upDown)count++;
+		    else count--;
+            if(this!=root) ((Node)parent).updateCount(upDown);
+            else size = root.count;
         }
 
 		@Override
@@ -111,15 +115,15 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 
     private Node root;
 	private int size;
-    private static final int _TOP = 2;
-    private static final int _BOTTOM = 3;
+	private boolean isRebalancing = false;
+    private int _TOP = 2;
+    private int _BOTTOM = 3;
 
 	/**
 	 * Default constructor. Builds a non-self-balancing tree.
 	 */
 	public ABTreeSet() {
-		// TODO
-
+		this(false);
 	}
 
 	/**
@@ -132,8 +136,9 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	 * @param isSelfBalancing
 	 */
 	public ABTreeSet(boolean isSelfBalancing) {
-		// TODO
-
+        root = null;
+        size = 0;
+        isRebalancing = isSelfBalancing;
 	}
 
 	/**
@@ -151,7 +156,11 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	 */
 	public ABTreeSet(boolean isSelfBalancing, int top, int bottom) {
 		// TODO
-
+        root = null;
+        size = 0;
+        _TOP = top;
+        _BOTTOM = bottom;
+        isRebalancing = isSelfBalancing;
 	}
 
 	/**
@@ -165,32 +174,63 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
         if(e==null) throw new NullPointerException("Cannot add null element.");
         if(root==null){
             root = new Node(e,null);
-            root.updateCount();
+            root.updateCount(true);
             return true;
         }
+        boolean needsRebal = false; //detects if rebalance is needed.
+        BSTNode<E> rebalNode = null; //node to rebalance from
         Node curr = root;
+        BSTNode added = null;
         int res;
-        while (true){
+
+        while (added==null){
             res = curr.data().compareTo(e);
             if(res==0) return false; //already in set
             else if(res > 0){
+                if(!needsRebal) {
+                    needsRebal = checkWeight(curr, false);
+                    rebalNode = curr;
+                }
                 if(curr.left!=null) curr = (Node)curr.left();
                 else{
                     curr.left = new Node(e,curr);
-                    curr.left.updateCount();
-                    return true;
+                    added = curr.left;
                 }
             }
             else{
+                if(!needsRebal) {
+                    needsRebal = checkWeight(curr, true);
+                    rebalNode = curr;
+                }
                 if(curr.right!=null) curr = (Node)curr.right();
                 else{
                     curr.right = new Node(e,curr);
-                    curr.right.updateCount();
-                    return true;
+                    added = curr.right;
                 }
             }
         }
+
+        if(isRebalancing&&needsRebal) rebalance(rebalNode);
+        added.updateCount(true);
+        return true;
 	}
+
+	private boolean checkWeight(BSTNode node, boolean tree){
+	    //false = left, true = right
+        int numLeft = 0, numRight = 0;
+        if(tree) {
+            numRight =1;
+            numRight+=node.right().count();
+        }
+        else {
+            numLeft =1;
+            numLeft+=node.left().count();
+        }
+        if(((numLeft*_BOTTOM) > (root.count()*_TOP))||
+                ((numRight*_BOTTOM) > (root.count()*_TOP)))
+        return true;
+        else return false;
+    }
 
 	@Override
 	public boolean contains(Object o) {
@@ -242,25 +282,75 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	 * @return an pre-order list of all nodes in the given sub-tree.
 	 */
 	public List<BSTNode<E>> preorderList(BSTNode<E> root) {
-		// TODO
-
-		return null;
+        ArrayList<BSTNode<E>> output = new ArrayList<>(size);
+        ABTreeIterator iterator = new ABTreeIterator();
+        while (iterator.hasNext()){
+            output.add(iterator.nextNode());
+        }
+        return output;
 	}
-
 	/**
 	 * Performs a re-balance operation on the subtree rooted at the given node.
 	 * 
 	 * @param bstNode
 	 */
 	public void rebalance(BSTNode<E> bstNode) {
-		// TODO
 
-	}
+        ArrayList<BSTNode> list = (ArrayList) inorderList(bstNode);
+        ArrayList<BSTNode> low = new ArrayList<>();
+        ArrayList<BSTNode> high = new ArrayList<>();
+        Node subRoot = (Node)splitList(list,low,high);
+        if(subRoot.data.compareTo(bstNode.data())>0){
+            subRoot.right = subRoot;
+            subRoot.parent = bstNode;
+        }
+        else{
+            subRoot.left = subRoot;
+            subRoot.parent = bstNode;
+        }
+        subRoot.left = low.get(low.size()/2 -1);
+        ((Node)subRoot.left).parent = subRoot;
+        subRoot.right = high.get(high.size()/2 -1);
+        ((Node)subRoot.right).parent = subRoot;
+        if(low.size()>1){
+            rebalanceRec(subRoot,low);
+        }
+        if(high.size()>1){
+            rebalanceRec(subRoot,high);
+        }
 
+    }
+	private void rebalanceRec(BSTNode<E> bstNode,ArrayList<BSTNode> toAdd){
+        ArrayList<BSTNode> list = toAdd;
+        ArrayList<BSTNode> low = new ArrayList<>();
+        ArrayList<BSTNode> high = new ArrayList<>();
+        Node subRoot = (Node)splitList(list,low,high);
+        subRoot.left = low.get(low.size()/2 -1);
+        ((Node)subRoot.left).parent = subRoot;
+        subRoot.right = high.get(high.size()/2 -1);
+        ((Node)subRoot.right).parent = subRoot;
+        if(low.size()>1){
+            rebalanceRec(subRoot,low);
+        }
+        if(high.size()>1){
+            rebalanceRec(subRoot,high);
+        }
+    }
+    private BSTNode<E> splitList(ArrayList<BSTNode> orig, ArrayList<BSTNode> low, ArrayList<BSTNode> high){
+	    //ignoring unchecked casts as the method is private and I have only used arraylists, so cast
+        // should be safe.
+	    low = (ArrayList)orig.subList(0,orig.size()/2-1);
+	    high = (ArrayList)orig.subList(orig.size()/2,orig.size());
+	    return orig.get(orig.size()/2 -1);
+    }
 	@Override
 	public boolean remove(Object o) {
 		BSTNode node = getBSTNode((E) o);
 		if(node==null) return false;
+		node.updateCount(false);
+		boolean needsRebalancing;
+		needsRebalancing = checkWeight(node.parent(), true);
+		needsRebalancing = checkWeight(node.parent(), false);
 		unlinkNode(node);
 		return true;
 	}
@@ -275,7 +365,8 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 	}
 
 	public void setSelfBalance(boolean isSelfBalance) {
-		// TODO
+		isRebalancing = isSelfBalance;
+		rebalance(root);
 
 	}
 
@@ -308,9 +399,21 @@ public class ABTreeSet<E extends Comparable<? super E>> extends AbstractSet<E> {
 
 	@Override
 	public String toString() {
-		// TODO
-
-		return null;
+        if(size==0) return "ABSet is empty, nothing to return.";
+        ABTreeIterator itr = (ABTreeIterator)iterator();
+        String out = "";
+        String offset = "                                   ";
+        while(itr.hasNext()){
+            BSTNode curr = null;
+            BSTNode curr2 = itr.nextNode();
+            int indent=0;
+            while(curr!=root){
+                curr=curr2.parent();
+                indent++;
+            }
+            out = out + offset.substring(0,indent) + curr2.data()+"\n";
+        }
+        return out;
 	}
 
 	private void unlinkNode(BSTNode<E> node){

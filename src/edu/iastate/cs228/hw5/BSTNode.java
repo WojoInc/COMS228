@@ -13,5 +13,5 @@ public interface BSTNode<E> {
 
 	String toString();
 
-	void updateCount();
+	void updateCount(boolean upDown);
 }
